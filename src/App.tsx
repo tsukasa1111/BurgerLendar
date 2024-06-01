@@ -13,12 +13,17 @@ import FoodAki from './components/Food_Aki';
 import LaunAki from './components/Laun_Aki';
 import Aki_Sleep from './components/Sleep_Aki';
 import Aki_Smoke from './components/Smoke_Aki';
+import Bur_Home from './components/Bur_Home';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
 function App() {
   return (
     <Router>
+      <Header />
+      <div style={{ paddingTop: '-10px', paddingBottom: '8px' }}> 
        <Routes>
-          <Route path="/home" Component={Home} />
+          <Route path="/home" Component={Bur_Home} />
           <Route path="/signup" Component={Authun} />
           <Route path="/" Component={Login} />
           <Route path="/admin" Component = {AddTabacco}/>
@@ -29,6 +34,8 @@ function App() {
           <Route path="/sleep" Component = {Aki_Sleep} />
           <Route path="/smoke" Component= {Aki_Smoke} />
         </Routes>
+        </div>
+      <Footer />
     </Router>
 
   );
