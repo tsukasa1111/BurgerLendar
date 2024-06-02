@@ -30,7 +30,7 @@ const FoodAki: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user) {
-      alert("ユーザーがログインしていません");
+      console.error("ユーザーがログインしていません");
       return;
     }
 
@@ -40,11 +40,10 @@ const FoodAki: React.FC = () => {
         food: selectedOptions,
         created_at: serverTimestamp()
       }, { merge: true });
-      alert("Selected options saved successfully.");
+      console.log("Selected options saved successfully.");
       navigate('/laun'); // 決定ボタンが押された後に/launに遷移
     } catch (error) {
       console.error("Error saving selected options: ", error);
-      alert("Error saving selected options.");
     }
   };
 
@@ -86,7 +85,7 @@ const styles = {
     flexDirection: 'column' as 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100vh',
+    height: 'calc(100vh - 60px)',
     backgroundColor: '#1d3557',
     color: '#f4a261',
   },

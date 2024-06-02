@@ -3,10 +3,13 @@ import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // useNavigateをインポート
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const BathAki: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
+  const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
+  const [fadeOut, setFadeOut] = useState<boolean>(false);
   const navigate = useNavigate(); // useNavigateフックを使用
 
   // Monitor auth state
@@ -30,7 +33,12 @@ const BathAki: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user) {
-      alert("ユーザーがログインしていません");
+      console.error("ユーザーがログインしていません");
+      return;
+    }
+
+    if (selectedOptions.length === 0) {
+      console.error("オプションを選択してください");
       return;
     }
 
@@ -39,12 +47,19 @@ const BathAki: React.FC = () => {
       await setDoc(userAkiRef, {
         bath: selectedOptions,
         created_at: serverTimestamp()
-      },{ merge: true });
-      alert("Selected options saved successfully.");
-      navigate('/food'); // 決定ボタンが押された後に/foodに遷移
+      }, { merge: true });
+      console.log("Selected options saved successfully.");
+      setShowCheckmark(true);
+      setTimeout(() => {
+        setFadeOut(true);
+        setTimeout(() => {
+          setShowCheckmark(false);
+          setFadeOut(false);
+          navigate('/food');
+        }, 300); // 0.5秒後に次のページに遷移
+      }, 500); // 1秒後にチェックマークをフェードアウト
     } catch (error) {
       console.error("Error saving selected options: ", error);
-      alert("Error saving selected options.");
     }
   };
 
@@ -54,27 +69,33 @@ const BathAki: React.FC = () => {
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
       <main style={styles.main}>
-        <div style={styles.questionContainer}>
-          <h2 style={styles.question}>質問1/5:</h2>
-          <p style={styles.subQuestion}>お風呂いつ入りますか？（複数選択可）</p>
-        </div>
-        <div style={styles.optionsContainer}>
-          {['朝', '昼', '夜'].map(option => (
-            <button
-              key={option}
-              style={{
-                ...styles.optionButton,
-                backgroundColor: selectedOptions.includes(option) ? '#f4a261' : '#f1faee',
-              }}
-              onClick={() => handleOptionToggle(option)}
-            >
-              {option}
+        {showCheckmark ? (
+          <CheckCircleOutlineIcon style={{ ...styles.checkmark, ...(fadeOut ? styles.fadeOut : {}) }} />
+        ) : (
+          <>
+            <div style={styles.questionContainer}>
+              <h2 style={styles.question}>質問1/5:</h2>
+              <p style={styles.subQuestion}>お風呂いつ入りますか？（複数選択可）</p>
+            </div>
+            <div style={styles.optionsContainer}>
+              {['朝', '昼', '夜'].map(option => (
+                <button
+                  key={option}
+                  style={{
+                    ...styles.optionButton,
+                    backgroundColor: selectedOptions.includes(option) ? '#f4a261' : '#f1faee',
+                  }}
+                  onClick={() => handleOptionToggle(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            <button style={styles.submitButton} onClick={handleSubmit}>
+              決定
             </button>
-          ))}
-        </div>
-        <button style={styles.submitButton} onClick={handleSubmit}>
-          決定
-        </button>
+          </>
+        )}
       </main>
     </div>
   );
@@ -86,7 +107,7 @@ const styles = {
     flexDirection: 'column' as 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100vh',
+    height: 'calc(100vh - 60px)',
     backgroundColor: '#1d3557',
     color: '#f4a261',
   },
@@ -147,6 +168,14 @@ const styles = {
     fontSize: '1em',
     borderRadius: '5px',
     cursor: 'pointer',
+  },
+  checkmark: {
+    fontSize: '4em',
+    color: '#f4a261',
+    transition: 'opacity 0.5s ease-out',
+  },
+  fadeOut: {
+    opacity: 0,
   },
 };
 
