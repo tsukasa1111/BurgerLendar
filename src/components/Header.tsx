@@ -1,12 +1,12 @@
 import React from 'react';
-import { AppBar, Toolbar, Typography, IconButton, Container } from '@mui/material';
+import { AppBar, Toolbar, Typography, IconButton } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
 
 const Header: React.FC = () => {
   return (
-    <AppBar position="fixed" style={{ height: '60px' }}>
-      <Toolbar style={{ minHeight: '60px' }}>
+    <AppBar position="static">
+      <Toolbar>
         <IconButton edge="start" color="inherit" aria-label="menu">
           <MenuIcon />
         </IconButton>
@@ -20,6 +20,5 @@ const Header: React.FC = () => {
     </AppBar>
   );
 };
-
 
 export default Header;
