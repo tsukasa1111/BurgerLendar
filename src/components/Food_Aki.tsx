@@ -3,12 +3,14 @@ import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // useNavigateをインポート
+import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const FoodAki: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
-  
+  const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
+
   // Monitor auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -30,18 +32,26 @@ const FoodAki: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user) {
-      console.error("ユーザーがログインしていません");
+      alert("ユーザーがログインしていません");
+      return;
+    }
+    if (selectedOptions.length === 0) {
+      console.error("オプションを選択してください");
       return;
     }
 
     try {
       const userAkiRef = doc(db, "Users_Aki", user.uid);
       await setDoc(userAkiRef, {
-        food: selectedOptions,
+        bath: selectedOptions,
         created_at: serverTimestamp()
       }, { merge: true });
       console.log("Selected options saved successfully.");
-      navigate('/laun'); // 決定ボタンが押された後に/launに遷移
+      setShowCheckmark(true);
+      setTimeout(() => {
+        setShowCheckmark(false);
+        navigate('/laun');
+      }, 500); // 0.5秒後に次のページに遷移
     } catch (error) {
       console.error("Error saving selected options: ", error);
     }
@@ -53,27 +63,33 @@ const FoodAki: React.FC = () => {
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
       <main style={styles.main}>
-        <div style={styles.questionContainer}>
-          <h2 style={styles.question}>質問2/5:</h2>
-          <p style={styles.subQuestion}>食事いつしますか？（複数選択可）</p>
-        </div>
-        <div style={styles.optionsContainer}>
-          {['朝', '昼', '夜'].map(option => (
-            <button
-              key={option}
-              style={{
-                ...styles.optionButton,
-                backgroundColor: selectedOptions.includes(option) ? '#f4a261' : '#f1faee',
-              }}
-              onClick={() => handleOptionToggle(option)}
-            >
-              {option}
+        {showCheckmark ? (
+          <CheckCircleOutlineIcon style={styles.checkmark} />
+        ) : (
+          <>
+            <div style={styles.questionContainer}>
+              <h2 style={styles.question}>質問2/5:</h2>
+              <p style={styles.subQuestion}>食事いつしますか？（複数選択可）</p>
+            </div>
+            <div style={styles.optionsContainer}>
+              {['朝', '昼', '夜'].map(option => (
+                <button
+                  key={option}
+                  style={{
+                    ...styles.optionButton,
+                    backgroundColor: selectedOptions.includes(option) ? '#f4a261' : '#f1faee',
+                  }}
+                  onClick={() => handleOptionToggle(option)}
+                >
+                  {option}
+                </button>
+              ))}
+            </div>
+            <button style={styles.submitButton} onClick={handleSubmit}>
+              決定
             </button>
-          ))}
-        </div>
-        <button style={styles.submitButton} onClick={handleSubmit}>
-          決定
-        </button>
+          </>
+        )}
       </main>
     </div>
   );
@@ -146,6 +162,10 @@ const styles = {
     fontSize: '1em',
     borderRadius: '5px',
     cursor: 'pointer',
+  },
+  checkmark: {
+    fontSize: '4em',
+    color: '#f4a261',
   },
 };
 

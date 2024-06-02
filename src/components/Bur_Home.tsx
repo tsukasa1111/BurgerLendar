@@ -1,102 +1,150 @@
-import React from 'react';
-import { Grid, Paper, Typography } from "@mui/material";
+import React, { useState, useEffect, useRef } from 'react';
+import { parseSchedule, ScheduleEvent } from './ScheduleParser';
+import '../App.css';
 
-const Home: React.FC = () => {
-  const events = [
-    { time: '8:30', title: 'event 1' },
-    { time: '11:00', title: 'event 2' },
-  ];
+const scheduleText = `
+6:00 - 起床
+身支度を整える
+ストレッチや軽い運動
+7:00 - 通勤/通学
+通勤時間を有効に使い、ポッドキャストを聞く、本を読むなど
+8:00 - 仕事/学校
+メールチェック
+重要なタスクの優先順位を確認
+集中作業
+10:00 - 休憩
+コーヒーブレイク
+軽いストレッチ
+10:15 - 仕事/授業再開
+ミーティングや授業
+プロジェクト作業
+12:00 - 昼食
+同僚や友人と昼食を取る
+散歩してリフレッシュ
+13:00 - 仕事/学校再開
+午後の作業開始
+重要なタスクの処理
+15:00 - 休憩
+スナックタイム
+同僚や友人と雑談
+15:15 - 仕事/授業再開
+残りのタスク処理
+進捗確認
+17:00 - 退社/帰宅
+帰宅準備
+帰りの交通手段
+18:00 - 自由時間
+趣味や運動
+友人や家族との時間
+19:00 - 夕食
+家族や友人と食事を楽しむ
+20:00 - リラックスタイム
+読書やテレビ鑑賞
+お風呂に入る
+21:00 - 次の日の準備
+服の準備
+予定の確認
+22:00 - 就寝準備
+歯磨きやスキンケア
+瞑想や軽いストレッチ
+22:30 - 就寝
+十分な睡眠を取る
+`;
 
-  return (
-    <div style={styles.container}>
-      <h1 style={styles.title}>Today's schedule</h1>
-      <div style={styles.schedule}>
-        <div style={styles.headerRow}>
-          <div style={styles.headerCell}>Sun 5/19</div>
-        </div>
-        <div style={styles.scheduleContent}>
-          {Array.from({ length: 24 }, (_, i) => i).map(hour => (
-            <div style={styles.row} key={hour}>
-              <div style={styles.timeCell}>{hour % 12 === 0 ? 12 : hour % 12}{hour < 12 ? 'am' : 'pm'}</div>
-              <div style={styles.eventCell}>
-                {events.map((event, index) =>
-                  parseInt(event.time.split(':')[0], 10) === hour ? (
-                    <div key={index} style={styles.event}>
-                      {event.time} {event.title}
-                    </div>
-                  ) : null
-                )}
-              </div>
+const Bur_Home: React.FC = () => {
+    const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
+    const [checkedEvents, setCheckedEvents] = useState<Set<number>>(new Set());
+    const currentEventRef = useRef<HTMLLIElement | null>(null);
+
+    useEffect(() => {
+        const events = parseSchedule(scheduleText);
+        setScheduleEvents(events);
+    }, []);
+
+    useEffect(() => {
+        if (currentEventRef.current) {
+            currentEventRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, [scheduleEvents]);
+
+    const toggleCheck = (index: number) => {
+        const newCheckedEvents = new Set(checkedEvents);
+        if (newCheckedEvents.has(index)) {
+            newCheckedEvents.delete(index);
+        } else {
+            newCheckedEvents.add(index);
+        }
+        setCheckedEvents(newCheckedEvents);
+    };
+
+    const getCurrentTime = () => {
+        const now = new Date();
+        return now.getHours() * 60 + now.getMinutes();
+    };
+
+    const currentTime = getCurrentTime();
+
+    const getMinutes = (time: string) => {
+        const [hours, minutes] = time.split(':').map(Number);
+        return hours * 60 + minutes;
+    };
+
+    const sortedEvents = [...scheduleEvents].sort((a, b) => {
+        const aTime = getMinutes(a.startTime);
+        const bTime = getMinutes(b.startTime);
+
+        if (aTime < currentTime && bTime >= currentTime) return 1;
+        if (aTime >= currentTime && bTime < currentTime) return -1;
+        return aTime - bTime;
+    });
+
+    const formatDate = (date: Date) => {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}年${month}月${day}日`;
+    };
+
+    const todayDate = formatDate(new Date());
+
+    let currentEventIndex = sortedEvents.findIndex(event => {
+        const eventStartTime = getMinutes(event.startTime);
+        const eventEndTime = getMinutes(event.endTime);
+        return currentTime >= eventStartTime && currentTime < eventEndTime;
+    });
+
+    if (currentEventIndex !== -1) {
+        const currentEvent = sortedEvents.splice(currentEventIndex, 1)[0];
+        sortedEvents.unshift(currentEvent);
+    }
+
+    return (
+        <div className="schedule-container">
+            <h1>Today's Schedule</h1>
+            <div className="schedule-date">{todayDate}</div>
+            <div className="schedule-content">
+                <ul className="schedule-list">
+                    {sortedEvents.map((event, index) => {
+                        const isCurrent = currentEventIndex !== -1 && index === 0;
+                        const isPast = getMinutes(event.endTime) < currentTime;
+                        return (
+                            <li
+                                key={index}
+                                ref={isCurrent ? currentEventRef : null}
+                                className={`schedule-item ${checkedEvents.has(index) ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}
+                                onClick={() => toggleCheck(index)}
+                            >
+                                <div>
+                                    <div className="schedule-time">{event.startTime} - {event.endTime}</div>
+                                    <div className="schedule-title-item">{event.title.split('\n')[0]}</div>
+                                </div>
+                            </li>
+                        );
+                    })}
+                </ul>
             </div>
-          ))}
         </div>
-      </div>
-    </div>
-  );
+    );
 };
 
-const styles = {
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 'calc(100vh - 120px)', // Adjusted for header and footer
-    backgroundColor: '#F9ECCB',
-    color: '#000',
-    textAlign: 'center' as 'center',
-  },
-  title: {
-    fontSize: '1.5em',
-    marginBottom: '20px',
-  },
-  schedule: {
-    width: '90%',
-    maxWidth: '400px',
-    backgroundColor: '#fff',
-    border: '1px solid #ddd',
-    borderRadius: '10px',
-    overflow: 'hidden',
-  },
-  headerRow: {
-    display: 'flex',
-    backgroundColor: '#f5f5f5',
-    borderBottom: '1px solid #ddd',
-    justifyContent: 'center' as 'center',
-  },
-  headerCell: {
-    flex: '1',
-    padding: '10px',
-    textAlign: 'center' as 'center',
-    fontWeight: 'bold' as 'bold',
-  },
-  scheduleContent: {
-    maxHeight: 'calc(70vh - 50px)', // Adjusted for header and footer
-    overflowY: 'scroll' as 'scroll',
-  },
-  row: {
-    display: 'flex',
-    borderBottom: '1px solid #ddd',
-  },
-  timeCell: {
-    flex: '1',
-    padding: '10px',
-    textAlign: 'center' as 'center',
-    borderRight: '1px solid #ddd',
-  },
-  eventCell: {
-    flex: '3',
-    padding: '10px',
-    position: 'relative' as 'relative',
-  },
-  event: {
-    position: 'absolute' as 'absolute',
-    width: '100%',
-    backgroundColor: '#add8e6',
-    borderRadius: '5px',
-    padding: '5px',
-    textAlign: 'center' as 'center',
-  },
-};
-
-export default Home;
+export default Bur_Home;
