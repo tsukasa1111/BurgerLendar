@@ -9,7 +9,6 @@ const BathAki: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
-  const [fadeOut, setFadeOut] = useState<boolean>(false);
   const navigate = useNavigate(); // useNavigateフックを使用
 
   // Monitor auth state
@@ -51,13 +50,9 @@ const BathAki: React.FC = () => {
       console.log("Selected options saved successfully.");
       setShowCheckmark(true);
       setTimeout(() => {
-        setFadeOut(true);
-        setTimeout(() => {
-          setShowCheckmark(false);
-          setFadeOut(false);
-          navigate('/food');
-        }, 300); // 0.5秒後に次のページに遷移
-      }, 500); // 1秒後にチェックマークをフェードアウト
+        setShowCheckmark(false);
+        navigate('/food');
+      }, 500); // 0.5秒後に次のページに遷移
     } catch (error) {
       console.error("Error saving selected options: ", error);
     }
@@ -70,7 +65,7 @@ const BathAki: React.FC = () => {
       </header>
       <main style={styles.main}>
         {showCheckmark ? (
-          <CheckCircleOutlineIcon style={{ ...styles.checkmark, ...(fadeOut ? styles.fadeOut : {}) }} />
+          <CheckCircleOutlineIcon style={styles.checkmark} />
         ) : (
           <>
             <div style={styles.questionContainer}>
@@ -172,10 +167,6 @@ const styles = {
   checkmark: {
     fontSize: '4em',
     color: '#f4a261',
-    transition: 'opacity 0.5s ease-out',
-  },
-  fadeOut: {
-    opacity: 0,
   },
 };
 
