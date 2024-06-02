@@ -17,6 +17,7 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import EventCalendar from './components/calendar';
 import ToDo from './components/todo';
+import Memories from './components/memories';
 
 function App() {
   return (
@@ -36,6 +37,7 @@ function App() {
           <Route path="/smoke" Component= {Aki_Smoke} />
           <Route path="/calendar" Component= {EventCalendar} />
           <Route path="/todo" Component= {ToDo} />
+          <Route path="/memories" Component= {Memories} />
         </Routes>
         </div>
       <Footer />
