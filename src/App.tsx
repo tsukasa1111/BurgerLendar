@@ -6,7 +6,7 @@ import Login from './components/Login';
 import AddTabacco from './components/AddTabacco';
 import Home from './components/Home';
 import TaskManager from './components/TaskManager';
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes  } from 'react-router-dom';
 import Bath from './components/Bath_aki';
 import FoodAki from './components/Food_Aki';
 import LaunAki from './components/Laun_Aki';
@@ -22,36 +22,26 @@ function App() {
   return (
     <Router>
       <Header />
-      <div className="app-content">
-        <Routes>
-          <Route path="/" element={<Login />} />
-          <Route path="/home" element={<Bur_Home />} />
-          <Route path="/signup" element={<Authun />} />
-          <Route path="/admin" element={<AddTabacco />} />
-          <Route path="/task" element={<TaskManager />} />
-          <Route path="/bath" element={<Bath />} />
-          <Route path="/food" element={<FoodAki />} />
-          <Route path="/laun" element={<LaunAki />} />
-          <Route path="/sleep" element={<Aki_Sleep />} />
-          <Route path="/smoke" element={<Aki_Smoke />} />
-          <Route path="/calendar" element={<EventCalendar />} />
-          <Route path="/todo" element={<ToDo />} />
+      <div style={{ paddingTop: '-10px', paddingBottom: '8px' }}> 
+       <Routes>
+          <Route path="/home" Component={Bur_Home} />
+          <Route path="/signup" Component={Authun} />
+          <Route path="/" Component={Login} />
+          <Route path="/admin" Component = {AddTabacco}/>
+          <Route path="/task" Component = {TaskManager} />
+          <Route path="/bath" Component = {Bath} /> 
+          <Route path="/food" Component = {FoodAki}  />
+          <Route path="/laun" Component = {LaunAki} />
+          <Route path="/sleep" Component = {Aki_Sleep} />
+          <Route path="/smoke" Component= {Aki_Smoke} />
+          <Route path="/calendar" Component= {EventCalendar} />
+          <Route path="/todo" Component= {ToDo} />
         </Routes>
-      </div>
-      <ConditionalFooter />
+        </div>
+      <Footer />
     </Router>
+
   );
 }
-
-function ConditionalFooter() {
-  const location = useLocation();
-  const footerPaths = ['/home', '/calendar', '/todo']; // フッターを表示するパスを指定
-
-  if (!footerPaths.includes(location.pathname)) {
-    return null;
-  }
-
-  return <Footer />;
-}
-
+ 
 export default App;
