@@ -40,6 +40,7 @@ const Footer: React.FC = () => {
       value={value}
       onChange={(event, newValue) => handleChange(newValue)}
       showLabels
+      style={{ width: '100%', height: '60px' }} // Adjust the height as needed
     >
       <BottomNavigationAction label="Home" icon={<HomeIcon />} />
       <BottomNavigationAction label="Calendar" icon={<EventIcon />} />

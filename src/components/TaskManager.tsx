@@ -151,8 +151,6 @@ const styles = {
   },
   title: {
     fontSize: '2.5em',
-    marginBottom: '20px',
-    marginTop: '5%',
   },
   box: {
     backgroundColor: '#fff',
