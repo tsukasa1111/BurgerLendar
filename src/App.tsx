@@ -16,6 +16,8 @@ import Aki_Smoke from './components/Smoke_Aki';
 import Bur_Home from './components/Bur_Home';
 import Header from './components/Header';
 import Footer from './components/Footer';
+import EventCalendar from './components/calendar';
+import ToDo from './components/todo';
 
 function App() {
   return (
@@ -33,6 +35,8 @@ function App() {
           <Route path="/laun" Component = {LaunAki} />
           <Route path="/sleep" Component = {Aki_Sleep} />
           <Route path="/smoke" Component= {Aki_Smoke} />
+          <Route path="/calendar" Component= {EventCalendar} />
+          <Route path="/todo" Component= {ToDo} />
         </Routes>
         </div>
       <Footer />
