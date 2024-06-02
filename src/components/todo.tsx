@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { CSSProperties } from 'react';
 
 const ToDo: React.FC = () => {
   const [items, setItems] = useState<string[]>(['スーパーへ行く']);
@@ -48,38 +49,40 @@ const ToDo: React.FC = () => {
 const styles = {
   container: {
     display: 'flex',
-    flexDirection: 'column' as 'column',
+    flexDirection: 'column' as const,
     alignItems: 'center',
     justifyContent: 'center',
-    height: '100vh',
+    height: 'calc(100vh - 120px)', // Adjusted for header and footer
     backgroundColor: '#F9ECCB',
     color: '#000',
-  },
+  } as CSSProperties,
   title: {
     fontSize: '2.5em',
     marginBottom: '20px',
-  },
+  } as CSSProperties,
   list: {
-    listStyleType: 'none' as 'none',
+    listStyleType: 'none' as const,
     padding: '0',
     width: '80%',
     maxWidth: '400px',
-  },
+    overflowY: 'scroll' as const,
+    maxHeight: 'calc(100vh - 200px)', // Adjusted for header, footer, and padding
+  } as CSSProperties,
   listItem: {
     display: 'flex',
     alignItems: 'center',
     padding: '10px 0',
     borderBottom: '1px solid #ddd',
-  },
+  } as CSSProperties,
   icon: {
     marginRight: '10px',
-  },
+  } as CSSProperties,
   input: {
     flex: '1',
     padding: '5px',
     border: '1px solid #ddd',
     borderRadius: '5px',
-  },
+  } as CSSProperties,
   addButton: {
     marginLeft: '10px',
     padding: '5px 10px',
@@ -88,7 +91,7 @@ const styles = {
     backgroundColor: '#003366',
     color: '#F9ECCB',
     cursor: 'pointer',
-  },
+  } as CSSProperties,
   removeButton: {
     marginLeft: '10px',
     padding: '5px 10px',
@@ -97,11 +100,7 @@ const styles = {
     backgroundColor: '#CC3333',
     color: 'white',
     cursor: 'pointer',
-  }
+  } as CSSProperties
 };
 
 export default ToDo;
-/*
-const root=document.getElementById('root');
-ReactDOM.createRoot(root).render(<App />);
-*/

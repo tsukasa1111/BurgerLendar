@@ -38,7 +38,7 @@ export const Login = () => {
   };
 
   return (
-    <Grid container justifyContent="center" alignItems="center" height="100vh">
+    <Grid container justifyContent="center" alignItems="center" height="calc(100vh - 120px)">
       <Paper elevation={3} sx={{ p: 4, width: "280px" }}>
         <Grid
           container

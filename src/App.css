@@ -1,3 +1,54 @@
+/* App.css */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden; /* Prevent scrolling */
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background-color: #282c34;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  background-color: #282c34;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.app-content {
+  margin-top: 60px;
+  flex: 1;
+  overflow-y: auto;
+}
+
 .App {
   text-align: center;
 }
@@ -35,4 +86,97 @@
   to {
     transform: rotate(360deg);
   }
+}
+
+.schedule-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: calc(100vh - 120px); /* Adjusted for header and footer */
+  background-color: #F9ECCB;
+  color: #000;
+  text-align: center;
+}
+
+.schedule-header {
+  width: 90%;
+  max-width: 400px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 20px;
+  padding: 10px;
+}
+
+.schedule-content {
+  width: 90%;
+  max-width: 400px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  overflow-y: scroll;
+  max-height: calc(70vh - 50px); /* Adjusted for header and footer */
+}
+
+.schedule-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.schedule-item {
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid #ddd;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.schedule-item.completed {
+  background-color: #d3d3d3;
+  text-decoration: line-through;
+}
+
+.schedule-item.current {
+  background-color: #add8e6;
+}
+
+.schedule-item.past {
+  background-color: #d3d3d3; 
+  color: #999;
+}
+
+.schedule-time {
+  font-weight: bold;
+}
+
+.schedule-title-item {
+  margin-top: 5px;
+}
+
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  max-width: 400px;
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 10px 0;
+  margin-top: 20px;
+}
+
+.nav-button {
+  background-color: #add8e6;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.nav-button:hover {
+  background-color: #87ceeb;
 }
