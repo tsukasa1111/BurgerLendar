@@ -97,7 +97,7 @@ const Authun = () => {
 
   return (
     <Container>
-      <Grid container justifyContent="center" alignItems="center" height="calc(100vh - 120px)">
+      <Grid container justifyContent="center" alignItems="center" style={{ height: "100vh" }}>
         <Grid item xs={12} md={6}>
           <Box p={3} boxShadow={2} borderRadius={2}>
             <h2>新規登録</h2>
