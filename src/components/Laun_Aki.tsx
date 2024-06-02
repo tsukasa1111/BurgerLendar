@@ -1,17 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { doc, setDoc, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "../firebase/firebase";
+import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
+import { auth, db } from "../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import { useNavigate } from "react-router-dom"; // useNavigateをインポート
 
 const LaunAki: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
-  const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
-  const [fadeOut, setFadeOut] = useState<boolean>(false);
-  const navigate = useNavigate();
+  const navigate = useNavigate(); // useNavigateフックを使用
 
+  // Monitor auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
@@ -30,7 +28,7 @@ const LaunAki: React.FC = () => {
 
   const handleSubmit = async () => {
     if (!user) {
-      console.error("ユーザーがログインしていません");
+      alert("ユーザーがログインしていません");
       return;
     }
 
@@ -40,22 +38,15 @@ const LaunAki: React.FC = () => {
         await setDoc(userAkiRef, {
           laun: selectedOption,
           created_at: serverTimestamp()
-        }, { merge: true });
-        console.log("Selected option saved successfully.");
-        setShowCheckmark(true);
-        setTimeout(() => {
-          setFadeOut(true);
-          setTimeout(() => {
-            setShowCheckmark(false);
-            setFadeOut(false);
-            navigate('/sleep');
-          }, 300); // 0.3秒後に次のページに遷移
-        }, 500); // 0.5秒後にチェックマークをフェードアウト
+        },{ merge: true });
+        alert("Selected option saved successfully.");
+        navigate('/sleep'); // 決定ボタンが押された後に/foodに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);
+        alert("Error saving selected option.");
       }
     } else {
-      console.error("オプションを選択してください");
+      alert("オプションを選択してください");
     }
   };
 
@@ -65,34 +56,28 @@ const LaunAki: React.FC = () => {
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
       <main style={styles.main}>
-        {showCheckmark ? (
-          <CheckCircleOutlineIcon style={{ ...styles.checkmark, ...(fadeOut ? styles.fadeOut : {}) }} />
-        ) : (
-          <>
-            <div style={styles.questionContainer}>
-              <h2 style={styles.question}>質問3/5:</h2>
-              <p style={styles.subQuestion}>洗濯はどれくらいの頻度でしますか？</p>
-            </div>
-            <div style={styles.optionsContainer}>
-              {['毎日', '二日に一回', '三日に一回'].map(option => (
-                <button
-                  key={option}
-                  style={{
-                    ...styles.optionButton,
-                    backgroundColor: selectedOption === option ? '#f4a261' : '#f1faee',
-                    color: selectedOption === option ? '#1d3557' : '#000',
-                  }}
-                  onClick={() => handleOptionSelect(option)}
-                >
-                  {option}
-                </button>
-              ))}
-            </div>
-            <button style={styles.submitButton} onClick={handleSubmit}>
-              決定
+        <div style={styles.questionContainer}>
+          <h2 style={styles.question}>質問3/5:</h2>
+          <p style={styles.subQuestion}>洗濯はどれくらいの頻度でしますか？</p>
+        </div>
+        <div style={styles.optionsContainer}>
+          {['毎日', '二日に一回', '三日に一回'].map(option => (
+            <button
+              key={option}
+              style={{
+                ...styles.optionButton,
+                backgroundColor: selectedOption === option ? '#f4a261' : '#f1faee',
+                color: selectedOption === option ? '#1d3557' : '#000',
+              }}
+              onClick={() => handleOptionSelect(option)}
+            >
+              {option}
             </button>
-          </>
-        )}
+          ))}
+        </div>
+        <button style={styles.submitButton} onClick={handleSubmit}>
+          決定
+        </button>
       </main>
     </div>
   );
@@ -104,7 +89,7 @@ const styles = {
     flexDirection: 'column' as 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 'calc(100vh - 60px)',
+    height: '100vh',
     backgroundColor: '#1d3557',
     color: '#f4a261',
   },
@@ -164,14 +149,6 @@ const styles = {
     fontSize: '1em',
     borderRadius: '5px',
     cursor: 'pointer',
-  },
-  checkmark: {
-    fontSize: '4em',
-    color: '#f4a261',
-    transition: 'opacity 0.5s ease-out',
-  },
-  fadeOut: {
-    opacity: 0,
   },
 };
 

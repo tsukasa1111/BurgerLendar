@@ -1,5 +1,8 @@
 import React from 'react';
-import { Grid, Paper, Typography } from "@mui/material";
+import ReactDOM from 'react-dom';
+import { Button, Container, Grid, TextField, Typography, Box, MenuItem, FormControlLabel, Checkbox } from "@mui/material";
+import { auth } from "../firebase/firebase";
+import { useNavigate } from "react-router-dom"; // useNavigateをインポート
 
 const Home: React.FC = () => {
   const events = [
@@ -41,7 +44,7 @@ const styles = {
     flexDirection: 'column' as 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 'calc(100vh - 120px)', // Adjusted for header and footer
+    height: '100vh',
     backgroundColor: '#F9ECCB',
     color: '#000',
     textAlign: 'center' as 'center',
@@ -71,7 +74,7 @@ const styles = {
     fontWeight: 'bold' as 'bold',
   },
   scheduleContent: {
-    maxHeight: 'calc(70vh - 50px)', // Adjusted for header and footer
+    maxHeight: '70vh', // Adjust as needed
     overflowY: 'scroll' as 'scroll',
   },
   row: {
@@ -98,5 +101,7 @@ const styles = {
     textAlign: 'center' as 'center',
   },
 };
+
+ReactDOM.render(<Home />, document.getElementById('root'));
 
 export default Home;
