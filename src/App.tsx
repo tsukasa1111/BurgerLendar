@@ -18,6 +18,7 @@ import Footer from './components/Footer';
 import EventCalendar from './components/calendar';
 import ToDo from './components/todo';
 import Memories from './components/memories';
+import Loading from './components/loading/welcometoBurger';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
           <Route path="/calendar" element={<EventCalendar />} />
           <Route path="/todo" element={<ToDo />} />
           <Route path="/memories" Component= {Memories} />
+          <Route path="/loading" Component= {Loading} />
         </Routes>
       </div>
       <ConditionalFooter />
