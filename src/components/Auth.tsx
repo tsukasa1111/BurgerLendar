@@ -1,22 +1,14 @@
 import React, { Fragment, useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-} from "firebase/auth";
-import { useNavigate } from "react-router-dom"
-import {
-  Box,
-  Button,
-  Container,
-  Grid,
-  TextField,
-} from "@mui/material";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useNavigate } from "react-router-dom";
+import { Box, Button, Container, Grid, TextField, Typography } from "@mui/material";
 import { auth } from "../firebase/firebase";
 
 const Auth = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   const Register = async () => {
     await createUserWithEmailAndPassword(auth, email, password)
@@ -39,47 +31,41 @@ const Auth = () => {
 
   return (
     <Fragment>
-      <Container>
-        <Grid container>
-        <Grid item md={4}></Grid>
-          <Grid item md={4}>
-            <Grid item md={4}>
-              Log in
-            </Grid>
-            <Box component="form">
-              <TextField
-                style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
-                name="email"
-                label="E-mail"
-                fullWidth
-                variant="outlined"
-                value={email}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  handleChangeEmail(event);
-                }}
-              />
-              <TextField
-                style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
-                name="password"
-                label="Password"
-                fullWidth
-                variant="outlined"
-                type="password"
-                value={password}
-                onChange={(event: React.ChangeEvent<HTMLInputElement>) => {
-                  handleChangePassword(event);
-                }}
-              />
-              <Button
-                fullWidth
-                style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
-                onClick={Register}
-              >
-                新規登録
-              </Button>
-            </Box>
-          </Grid>
-          <Grid item md={4}></Grid>
+      <Container maxWidth="xs" style={{ height: "100vh", display: "flex", justifyContent: "center", alignItems: "center" }}>
+        <Grid container justifyContent="center" alignItems="center" height="calc(100vh - 120px)">
+          <Typography variant="h4" gutterBottom>
+            Log in
+          </Typography>
+          <Box component="form" style={{ width: "100%" }}>
+            <TextField
+              style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
+              name="email"
+              label="E-mail"
+              fullWidth
+              variant="outlined"
+              value={email}
+              onChange={handleChangeEmail}
+            />
+            <TextField
+              style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
+              name="password"
+              label="Password"
+              fullWidth
+              variant="outlined"
+              type="password"
+              value={password}
+              onChange={handleChangePassword}
+            />
+            <Button
+              fullWidth
+              variant="contained"
+              color="primary"
+              style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
+              onClick={Register}
+            >
+              新規登録
+            </Button>
+          </Box>
         </Grid>
       </Container>
     </Fragment>
