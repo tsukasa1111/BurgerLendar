@@ -7,6 +7,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import { CheckIcon, ExclamationTriangleIcon } from '@heroicons/react/20/solid'
 import { EventSourceInput } from '@fullcalendar/core/index.js'
 import jaLocale from "@fullcalendar/core/locales/ja";
+import listPlugin from '@fullcalendar/list';
 
 
 interface Event {
@@ -16,7 +17,6 @@ interface Event {
   description: string;
   id: number;
 }
-
 
 
 export default function EventCalendar() {
@@ -112,11 +112,11 @@ export default function EventCalendar() {
 
   return (
     <>
-      <nav className="flex justify-between mb-12 border-b border-violet-100 p-4">
-        <h1>   </h1>
+      <nav className="flex justify-between mb-2 border-b border-violet-100 p-2">
+        <h1>  </h1>
       </nav>
-      <main className="flex min-h-screen flex-col items-center justify-between p-24">
-        <div className="grid grid-cols-10">
+      <main className="flex min-h-screen flex-col items-center justify-between px-4 py-2">
+        <div className="grid grid-cols-1">
           <div className="col-span-8">
             <FullCalendar
               locales={[jaLocale]}
@@ -124,12 +124,13 @@ export default function EventCalendar() {
               plugins={[
                 dayGridPlugin,
                 interactionPlugin,
-                timeGridPlugin
+                timeGridPlugin,
+                listPlugin
               ]}
               headerToolbar={{
-                left: 'prev,next today',
-                center: 'title',
-                right: 'resourceTimelineWook, dayGridMonth,timeGridWeek'
+                left: 'title,prev,next today',
+                center: 'listWeek',
+                right: 'dayGridMonth,timeGridDay'
               }}
               events={allEvents as EventSourceInput}
               nowIndicator={true}
@@ -147,20 +148,8 @@ export default function EventCalendar() {
               
             />
           </div>
-          <div id="draggable-el" className="ml-8 w-full border-2 p-2 rounded-md mt-16 lg:h-1/2 bg-violet-50">
-            <h1 className="font-bold text-lg text-center">Drag Event</h1>
-            {/* draggableなevent配列を表示 */}
-            {events.map(event => (
-              <div
-                className="fc-event border-2 p-1 m-2 w-full rounded-md ml-auto text-center bg-white"
-                title={event.title}
-                key={event.id}
-              >
-                {event.title}
-              </div>
-            ))}
-          </div>
         </div>
+
         {/*イベントの削除を確認するためのModal*/}
         <Transition.Root show={showDeleteModal} as={Fragment}>
           <Dialog as="div" className="relative z-10" onClose={setShowDeleteModal}>
@@ -188,7 +177,7 @@ export default function EventCalendar() {
                   leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
                   <Dialog.Panel className="relative transform overflow-hidden rounded-lg
-                   bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg"
+                   bg-white text-left shadow-xl transition-all mx-auto max-w-full sm:w-full"
                   >
                     <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
                       <div className="sm:flex sm:items-start">
@@ -209,11 +198,11 @@ export default function EventCalendar() {
                       </div>
                     </div>
                     <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                      <button type="button" className="inline-flex w-full justify-center rounded-md bg-red-600 px-3 py-2 text-sm 
+                      <button type="button" className="inline-flex w-full justify-center rounded-md bg-red-600 px-2 py-1 text-sm 
                       font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto" onClick={handleDelete}>
                         Delete
                       </button>
-                      <button type="button" className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 
+                      <button type="button" className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-2 py-1 text-sm font-semibold text-gray-900 
                       shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
                         onClick={handleCloseModal}
                       >
@@ -360,3 +349,37 @@ export default function EventCalendar() {
   )
 }
 
+const styles = {
+  container: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      width: '100%',
+      padding: '10px',
+      
+  },
+  header: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      color: 'white',
+      padding: '10px'
+  },
+  formGroup: {
+      display: 'flex',
+      flexDirection: 'column' as const,
+      alignItems: 'center',
+      justifyContent: 'center'
+  },
+  input: {
+      width: '90%',
+      padding: '10px',
+      margin: '5px',
+      border: 'none',
+      borderRadius: '5px'
+  },
+  button: {
+      color: 'white',
+      backgroundColor: 'transparent',
+      border: 'none'
+  }
+};
