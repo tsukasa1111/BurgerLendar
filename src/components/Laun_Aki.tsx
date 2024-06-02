@@ -9,6 +9,7 @@ const LaunAki: React.FC = () => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
+  const [fadeOut, setFadeOut] = useState<boolean>(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,8 +44,13 @@ const LaunAki: React.FC = () => {
         console.log("Selected option saved successfully.");
         setShowCheckmark(true);
         setTimeout(() => {
-          navigate('/sleep');
-        }, 500); // 0.5秒後に次のページに遷移
+          setFadeOut(true);
+          setTimeout(() => {
+            setShowCheckmark(false);
+            setFadeOut(false);
+            navigate('/sleep');
+          }, 300); // 0.3秒後に次のページに遷移
+        }, 500); // 0.5秒後にチェックマークをフェードアウト
       } catch (error) {
         console.error("Error saving selected option: ", error);
       }
@@ -60,7 +66,7 @@ const LaunAki: React.FC = () => {
       </header>
       <main style={styles.main}>
         {showCheckmark ? (
-          <CheckCircleOutlineIcon style={styles.checkmark} />
+          <CheckCircleOutlineIcon style={{ ...styles.checkmark, ...(fadeOut ? styles.fadeOut : {}) }} />
         ) : (
           <>
             <div style={styles.questionContainer}>
@@ -162,6 +168,10 @@ const styles = {
   checkmark: {
     fontSize: '4em',
     color: '#f4a261',
+    transition: 'opacity 0.5s ease-out',
+  },
+  fadeOut: {
+    opacity: 0,
   },
 };
 
