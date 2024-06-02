@@ -1,5 +1,4 @@
 import React from 'react';
-import logo from './logo.svg';
 import './App.css';
 import Authun from './components/Authun';
 import Aiueoto from './components/Aiueoto';
