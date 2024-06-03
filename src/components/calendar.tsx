@@ -15,6 +15,7 @@ import listPlugin from "@fullcalendar/list";
 interface Event {
   title: string;
   start: Date | string;
+  end: Date | string;
   allDay: boolean;
   description: string;
   id: number;
@@ -29,6 +30,7 @@ export default function EventCalendar() {
   const [newEvent, setNewEvent] = useState<Event>({
     title: "",
     start: "",
+    end: "",
     allDay: false,
     id: 0,
     description: "",
@@ -90,6 +92,7 @@ export default function EventCalendar() {
     setNewEvent({
       title: "",
       start: "",
+      end: "",
       allDay: false,
       id: 0,
       description: "",
@@ -112,6 +115,7 @@ export default function EventCalendar() {
     setNewEvent({
       title: "",
       start: "",
+      end: "",
       allDay: false,
       id: 0,
       description: "",
@@ -120,12 +124,12 @@ export default function EventCalendar() {
 
   return (
     <>
-      <nav className="flex justify-between mb-2 border-b border-violet-100 p-2">
-        <h1> </h1>
+      <nav className="flex justify-between  border-b border-violet-100 p-1">
+        <h1>     </h1>
       </nav>
-      <main className="flex min-h-screen flex-col items-center justify-between px-4 py-2">
+      <main className="flex  flex-col mx-1 ">
         <div className="grid grid-cols-1">
-          <div className="col-span-8">
+          <div className="">
             <FullCalendar
               locales={[jaLocale]}
               locale={jaLocale}
@@ -135,10 +139,12 @@ export default function EventCalendar() {
                 timeGridPlugin,
                 listPlugin,
               ]}
+              
+              height={700}
               headerToolbar={{
-                left: "title,prev,next today",
-                center: "listWeek",
-                right: "dayGridMonth,timeGridDay",
+                left: "prev,next",
+                center: "title",
+                right: "today",
               }}
               events={allEvents as EventSourceInput}
               nowIndicator={true}
@@ -296,6 +302,7 @@ export default function EventCalendar() {
                               onChange={handleChange}
                               placeholder="Title"
                             />
+
                             <input
                               type="text"
                               name="description"
