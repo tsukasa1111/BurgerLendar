@@ -17,6 +17,8 @@ import Header from './components/Header';
 import Footer from './components/Footer';
 import EventCalendar from './components/calendar';
 import ToDo from './components/todo';
+import Memories from './components/memories';
+import Loading from './components/loading/welcometoBurger';
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
           <Route path="/smoke" element={<Aki_Smoke />} />
           <Route path="/calendar" element={<EventCalendar />} />
           <Route path="/todo" element={<ToDo />} />
+          <Route path="/memories" Component= {Memories} />
+          <Route path="/loading" Component= {Loading} />
         </Routes>
       </div>
       <ConditionalFooter />
@@ -45,7 +49,7 @@ function App() {
 
 function ConditionalFooter() {
   const location = useLocation();
-  const footerPaths = ['/home', '/calendar', '/todo']; // フッターを表示するパスを指定
+  const footerPaths = ['/home', '/calendar', '/todo','/memories']; // フッターを表示するパスを指定
 
   if (!footerPaths.includes(location.pathname)) {
     return null;
