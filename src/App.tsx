@@ -19,6 +19,8 @@ import EventCalendar from './components/calendar';
 import ToDo from './components/todo';
 import Memories from './components/memories';
 import Loading from './components/loading/welcometoBurger';
+import Profile from './components/Profile';
+import ModeSelector from './components/ModeSelector';
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
       <div className="app-content">
         <Routes>
           <Route path="/" element={<Login />} />
+          <Route path="/modeselector" element={<ModeSelector />} />
+          <Route path="/profile" element={<Profile name="Your Name" username="YourUsername" email="youremail@example.com" bath="Once a day" food="Vegetarian" laundry="Weekly" sleep="8 hours" smoke="Non-smoker" />} />
           <Route path="/home" element={<Bur_Home />} />
           <Route path="/signup" element={<Authun />} />
           <Route path="/admin" element={<AddTabacco />} />
@@ -38,8 +42,8 @@ function App() {
           <Route path="/smoke" element={<Aki_Smoke />} />
           <Route path="/calendar" element={<EventCalendar />} />
           <Route path="/todo" element={<ToDo />} />
-          <Route path="/memories" Component= {Memories} />
-          <Route path="/loading" Component= {Loading} />
+          <Route path="/memories" element={<Memories />} />
+          <Route path="/loading" element={<Loading />} />          
         </Routes>
       </div>
       <ConditionalFooter />
@@ -49,7 +53,7 @@ function App() {
 
 function ConditionalFooter() {
   const location = useLocation();
-  const footerPaths = ['/home', '/calendar', '/todo','/memories']; // フッターを表示するパスを指定
+  const footerPaths = ['/home', '/calendar', '/todo', '/memories' ,'/profile','/modeselector' ,"/"]; // フッターを表示するパスを指定
 
   if (!footerPaths.includes(location.pathname)) {
     return null;
