@@ -9,16 +9,24 @@ interface ScheduleItem {
 interface EduProps {
   setOutput: (output: string) => void;
 }
+interface ScheduledTask {
+  Title: string;
+  deadline: string;
+}
 
 const Edu: React.FC<EduProps> = ({ setOutput }) => {
   const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([
     { startTime: "", endTime: "", description: "" },
   ]);
+
+  const [scheduleTasks, setScheduleTasks] = useState<ScheduledTask[]>([]);
+
   const [tasks, setTasks] = useState<string[]>([""]);
   const [motivation, setMotivation] = useState<"low" | "medium" | "high">(
     "low"
   );
-  const [output, setoutput] = useState<string>("");
+  const [out, setout] = useState<string>("");
+
   const handleScheduleChange = (
     index: number,
     field: keyof ScheduleItem,
@@ -37,6 +45,21 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
     ]);
   };
 
+  const handleScheduledTaskChange = (
+    index: number,
+    field: keyof ScheduledTask,
+    value: string
+  ) => {
+    const newTasks = scheduleTasks.map((task, idx) =>
+      idx === index ? { ...task, [field]: value } : task
+    );
+    setScheduleTasks(newTasks);
+  };
+
+  const addScheduledTask = () => {
+    setScheduleTasks([...scheduleTasks, { Title: "", deadline: "" }]);
+  };
+
   const handleTaskChange = (index: number, value: string) => {
     const newTasks = tasks.map((task, idx) => (idx === index ? value : task));
     setTasks(newTasks);
@@ -49,25 +72,43 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const prompt = `
-        Given the following schedule items and tasks with their respective start and end times, and considering the motivation level for the day (${motivation}), organize a schedule in the specified format.
+    Given the following schedule items and tasks with their respective start and end times,
+    and considering the motivation level for the day (${motivation}).
+    if (motivation) is low, you can not need to include any other tasks.
+    if (motivation) is medium, please put in one task that is closest to the due date.
+    if (motivation) is high, put in as many tasks as possible in order of due date.
+    organize a schedule in the specified format.
 
-        Schedule Items:
-        ${scheduleItems.map((item) => `Start: ${item.startTime}, End: ${item.endTime}, Description: ${item.description}`).join("\n")}
+    Schedule Items(To be done at a specific time during the day):
+    ${scheduleItems
+      .map(
+        (item) =>
+          `Start: ${item.startTime}, End: ${item.endTime}, Description: ${item.description}`
+      )
+      .join("\n")}
 
-        Tasks (To be done at any time during the day):
-        - ${tasks.join("\n- ")}
+    Tasks (To be done at any time during the day):
+    - ${tasks.join("\n- ")}
 
-        Please organize the schedule, followed by a description if available and Schedule title in one word. 
-        Use the format:
-        hh:mm - Schedule Title
-        Description
-        
-        If there is no task, do not write anything about the task.
+    Scheduled Tasks (with Deadline but ):
+    ${scheduleTasks
+      .map((task) => `Title: ${task.Title}, Deadline: ${task.deadline}`)
+      .join("\n")}
 
-        Generate a schedule considering the best times to fit the tasks around the fixed schedule items, optimizing productivity based on the motivation level.
-            `;
+    Please organize the schedule, followed by a short description if available and Schedule title in one word. 
+    Use the format:
+    hh:mm - Schedule Title
+    Description
+
+    And you have to add breakfast,lunch,dinner and sleep and smoke(7times and each time take 10 minutes) in the schedule.
+    
+    If there is no task, do not write anything about the task.
+
+    Generate a schedule considering the best times to fit the tasks around the fixed schedule items, optimizing productivity based on the motivation level.
+        `;
 
     try {
+      
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -81,7 +122,8 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
           },
         }
       );
-      setoutput(response.data.choices[0].message.content);
+      setOutput(response.data.choices[0].message.content);
+      setout(response.data.choices[0].message.content);
     } catch (error) {
       console.error("Error fetching response:", error);
     }
@@ -133,6 +175,28 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
           Add Task
         </button>
 
+        {scheduleTasks.map((task, index) => (
+          <div key={index}>
+            <input
+              type="text"
+              value={task.Title}
+              onChange={(e) =>
+                handleScheduledTaskChange(index, "Title", e.target.value)
+              }
+            />
+            <input
+              type="date"
+              value={task.deadline}
+              onChange={(e) =>
+                handleScheduledTaskChange(index, "deadline", e.target.value)
+              }
+            />
+          </div>
+        ))}
+        <button type="button" onClick={addScheduledTask}>
+          Add Scheduled Task
+        </button>
+
         <div>
           <label>Motivation Level:</label>
           <select
@@ -149,7 +213,7 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
         <button type="submit">Generate Schedule</button>
       </form>
       <div>
-        <h1>{output}</h1>
+        <h1>{out}</h1>
       </div>
     </div>
   );
