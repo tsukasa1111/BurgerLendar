@@ -120,12 +120,14 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     const currentEvent = sortedEvents.splice(currentEventIndex, 1)[0];
     sortedEvents.unshift(currentEvent);
   }
+  console.log("schedule");
+  console.log(scheduleEvents);
+  //console.log(formattedText);
 
   return (
     <div className="schedule-container">
       <h1>Today's Schedule</h1>
-      <div className="schedule-date">{todayDate}</div>
-      <h1>{formattedText}</h1>
+
       <div className="schedule-content">
         <ul className="schedule-list">
           {sortedEvents.map((event, index) => {
