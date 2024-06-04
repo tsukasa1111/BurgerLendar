@@ -1,13 +1,19 @@
-// src/App.tsx
-import React from 'react';
+import React, { useState } from "react";
 import Chat from './chat';
+import Edu from './education';
+import Home from './home';
 
-function App() {
+const App:React.FC = () =>{
+  const [output, setOutput] = useState<string>("");
+
   return (
-    <div className="App">
-      <Chat />
+    <div>
+      <Edu setOutput={setOutput} />
+      
+      <Home output={output} />
     </div>
   );
+
 }
 
 export default App;
