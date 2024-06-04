@@ -18,7 +18,7 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
   const [motivation, setMotivation] = useState<"low" | "medium" | "high">(
     "low"
   );
-  const [output, setoutput] = useState<string>("");
+  const [out, setout] = useState<string>("");
   const handleScheduleChange = (
     index: number,
     field: keyof ScheduleItem,
@@ -81,7 +81,8 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
           },
         }
       );
-      setoutput(response.data.choices[0].message.content);
+      setOutput(response.data.choices[0].message.content);
+      setout(response.data.choices[0].message.content);
     } catch (error) {
       console.error("Error fetching response:", error);
     }
@@ -149,7 +150,7 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
         <button type="submit">Generate Schedule</button>
       </form>
       <div>
-        <h1>{output}</h1>
+        <h1>{out}</h1>
       </div>
     </div>
   );
