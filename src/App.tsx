@@ -21,6 +21,7 @@ import Memories from './components/memories';
 import Loading from './components/loading/welcometoBurger';
 import Profile from './components/Profile';
 import ModeSelector from './components/ModeSelector';
+import Chat from './components/chatGPT/page';
 
 function App() {
   return (
@@ -44,6 +45,9 @@ function App() {
           <Route path="/todo" element={<ToDo />} />
           <Route path="/memories" element={<Memories />} />
           <Route path="/loading" element={<Loading />} />          
+          <Route path="/memories" Component= {Memories} />
+          <Route path="/loading" Component= {Loading} />
+          <Route path="/chat" Component= {Chat} />
         </Routes>
       </div>
       <ConditionalFooter />
