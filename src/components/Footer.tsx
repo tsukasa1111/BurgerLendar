@@ -9,8 +9,6 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import MemoryIcon from '@mui/icons-material/Memory';
 import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
-import EmojiEmotionsIcon from '@mui/icons-material/EmojiEmotions';
-import EmojiEmotionsOutlinedIcon from '@mui/icons-material/EmojiEmotionsOutlined';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
@@ -32,10 +30,10 @@ const Footer: React.FC = () => {
         navigate('/memories');
         break;
       case 4:
-        navigate('/burger');
+        navigate('/profile');
         break;
       default:
-        navigate('/home');
+        navigate('/mode-selector');
         break;
     }
   };
@@ -45,7 +43,7 @@ const Footer: React.FC = () => {
       value={value}
       onChange={handleChange}
       showLabels
-      style={{ width: '100%', height: '60px', backgroundColor: '#fff' }} // 背景色を白に変更
+      style={{ width: '100%', height: '60px', backgroundColor: '#fff' }}
       className="bottom-navigation"
     >
       <BottomNavigationAction
@@ -69,8 +67,8 @@ const Footer: React.FC = () => {
         className={`nav-action ${value === 3 ? 'selected' : ''}`}
       />
       <BottomNavigationAction
-        label="Burger"
-        icon={value === 4 ? <EmojiEmotionsIcon /> : <EmojiEmotionsOutlinedIcon />}
+        label="MyPage"
+        icon={<span role="img" aria-label="burger">🍔</span>}
         className={`nav-action ${value === 4 ? 'selected' : ''}`}
       />
     </BottomNavigation>
