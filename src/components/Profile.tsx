@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import WebGL from './webGL/webGL';
 
 interface ProfileProps {
   name: string;
@@ -68,6 +69,7 @@ const Profile: React.FC<ProfileProps> = ({ name, username, email, bath, food, la
   return (
     <div className="profile-container">
       <div className="profile-header">
+        
         <h2>Profile</h2>
         <button className="edit-button" onClick={toggleEditMode}>
           {isEditing ? 'Save' : 'Edit'}
