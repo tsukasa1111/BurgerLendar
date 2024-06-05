@@ -231,4 +231,19 @@ footer {
   transform: scale(1.2); /* 選択されたアイコンのサイズを大きく */
 }
 
+.date-picker-popper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: translate(-50%, -50%);
+  position: fixed !important;
+  top: 50% ;
+  left: -10% !important;
+  z-index: 1000;
+  border-radius: 0; /* 角を丸くしない */
+}
+
+.react-datepicker__triangle {
+  display: none; /* 上部の矢印を非表示にする */
+}
 

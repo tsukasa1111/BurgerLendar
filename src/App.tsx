@@ -60,7 +60,7 @@ function App() {
 
 function ConditionalFooter() {
   const location = useLocation();
-  const footerPaths = ['/home', '/calendar', '/todo', '/memories' ,'/profile','/modeselector' ,"/"]; // フッターを表示するパスを指定
+  const footerPaths = ['/home', '/calendar', '/todo', '/memories' ,'/profile','/modeselector' ]; // フッターを表示するパスを指定
 
   if (!footerPaths.includes(location.pathname)) {
     return null;

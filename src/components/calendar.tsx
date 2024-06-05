@@ -1,175 +1,260 @@
-import FullCalendar from "@fullcalendar/react";
-import dayGridPlugin from "@fullcalendar/daygrid";
-import interactionPlugin, {
-  Draggable,
-  DropArg,
-} from "@fullcalendar/interaction";
-import timeGridPlugin from "@fullcalendar/timegrid";
-import { Fragment, useEffect, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
-import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
-import { EventSourceInput } from "@fullcalendar/core/index.js";
-import jaLocale from "@fullcalendar/core/locales/ja";
-import listPlugin from "@fullcalendar/list";
-
+import React, { useState, useEffect, Fragment } from 'react';
+import { Dialog, Transition } from '@headlessui/react';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
+import { db, auth } from '../firebase/firebase';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 interface Event {
+  id: string;
   title: string;
-  start: Date | string;
-  end: Date | string;
-  allDay: boolean;
+  date: string;
+  startTime: string;
+  endTime: string;
   description: string;
-  id: number;
 }
 
-export default function EventCalendar() {
-  const [allEvents, setAllEvents] = useState<Event[]>([]);
+const Calendar = () => {
+  const today = new Date();
+  const [currentMonth, setCurrentMonth] = useState(today.getMonth());
+  const [currentYear, setCurrentYear] = useState(today.getFullYear());
+  const [selectedDate, setSelectedDate] = useState(today.getDate());
+  const [events, setEvents] = useState<Event[]>([]);
   const [showModal, setShowModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [idToDelete, setIdToDelete] = useState<number | null>(null);
-
+  const [eventToEdit, setEventToEdit] = useState<Event | null>(null);
   const [newEvent, setNewEvent] = useState<Event>({
-    title: "",
-    start: "",
-    end: "",
-    allDay: false,
-    id: 0,
-    description: "",
+    id: '',
+    title: '',
+    date: '',
+    startTime: '',
+    endTime: '',
+    description: '',
   });
-  //draggableなeventを設定、ここで設定したものがカレンダーに表示される。
-  useEffect(() => {
-    let draggableEl = document.getElementById("draggable-el");
-    if (draggableEl) {
-      new Draggable(draggableEl, {
-        itemSelector: ".fc-event",
-        eventData: function (eventEl) {
-          let title = eventEl.getAttribute("title");
-          let id = eventEl.getAttribute("data");
-          let start = eventEl.getAttribute("start");
-          return { title, id, start };
-        },
-      });
-    }
-  }, []);
-  //month表示から日をクリックしたときの処理
-  //新しいeventを作成して、現在時刻のタイムスタンプをidに設定している。
-  function handleDateClick(arg: { date: Date; allDay: boolean }) {
-    setNewEvent({
-      ...newEvent,
-      start: arg.date,
-      allDay: arg.allDay,
-      id: new Date().getTime(),
-    });
-    setShowModal(true);
-  }
-  //ドロップしたときの処理追加している。
-  function addEvent(data: DropArg) {
-    const event = {
-      ...newEvent,
-      start: data.date.toISOString(),
-      title: data.draggedEl.innerText,
-      allDay: data.allDay,
-      id: new Date().getTime(),
-    };
-    setAllEvents([...allEvents, event]);
-  }
-  //削除モーダルを表示する処理（idを与えて、どのイベントを消すかを指定する）
-  function handleDeleteModal(data: { event: { id: string } }) {
-    setShowDeleteModal(true);
-    setIdToDelete(Number(data.event.id));
-  }
-  //削除確認modalで削除を選択したときの削除&modalを閉じる処理
-  function handleDelete() {
-    setAllEvents(
-      allEvents.filter((event) => Number(event.id) !== Number(idToDelete))
-    );
-    setShowDeleteModal(false);
-    setIdToDelete(null);
-  }
-  //modalwindowを閉じる処理
-  //setNewEventでフォームをリセットすることで、過去の情報を残さない。
-  function handleCloseModal() {
-    setShowModal(false);
-    setNewEvent({
-      title: "",
-      start: "",
-      end: "",
-      allDay: false,
-      id: 0,
-      description: "",
-    });
-    setShowDeleteModal(false);
-    setIdToDelete(null);
-  }
+  const [user, setUser] = useState<any>(null);
+  const [swipedEvent, setSwipedEvent] = useState<string | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setNewEvent({
-      ...newEvent,
-      title: e.target.value,
+  useEffect(() => {
+    // ウィンドウの高さを取得し、viewportHeight状態を更新する関数
+    const handleResize = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // 初期設定
+
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        fetchEvents(currentUser.uid);
+      } else {
+        setUser(null);
+      }
     });
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      unsubscribe();
+    };
+  }, []);
+
+  const fetchEvents = async (userId: string) => {
+    try {
+      const q = query(collection(db, "users", userId, "events"));
+      const querySnapshot = await getDocs(q);
+      const eventsData = querySnapshot.docs.map(doc => {
+        const data = doc.data() as Omit<Event, 'id'>;
+        return {
+          id: doc.id,
+          ...data
+        };
+      });
+      setEvents(eventsData);
+    } catch (error) {
+      console.error('Error fetching events: ', error);
+    }
   };
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setAllEvents([...allEvents, newEvent]);
-    setShowModal(false);
-    setNewEvent({
-      title: "",
-      start: "",
-      end: "",
-      allDay: false,
-      id: 0,
-      description: "",
-    });
-  }
+  const handleDateClick = (date: number) => {
+    setSelectedDate(date);
+  };
+
+  const handleMonthChange = (offset: number) => {
+    const newMonth = currentMonth + offset;
+    if (newMonth < 0) {
+      setCurrentMonth(11);
+      setCurrentYear(currentYear - 1);
+    } else if (newMonth > 11) {
+      setCurrentMonth(0);
+      setCurrentYear(currentYear + 1);
+    } else {
+      setCurrentMonth(newMonth);
+    }
+  };
+
+  const handleEventChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setNewEvent({ ...newEvent, [name]: value });
+  };
+
+  const handleEventSubmit = async () => {
+    if (!user) {
+      alert('User is not authenticated');
+      return;
+    }
+
+    if (!newEvent.title || !newEvent.startTime || !newEvent.endTime) {
+      alert('Please fill in the title, start time, and end time');
+      return;
+    }
+
+    const firestoreEvent = {
+      title: newEvent.title,
+      date: selectedDate ? `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}` : '',
+      startTime: newEvent.startTime,
+      endTime: newEvent.endTime,
+      description: newEvent.description,
+    };
+
+    try {
+      if (eventToEdit) {
+        await updateDoc(doc(db, "users", user.uid, "events", eventToEdit.id), firestoreEvent);
+        setEvents(events.map((event) => (event.id === eventToEdit.id ? { ...firestoreEvent, id: eventToEdit.id } : event)));
+      } else {
+        const docRef = await addDoc(collection(db, "users", user.uid, "events"), firestoreEvent);
+        setEvents([...events, { ...firestoreEvent, id: docRef.id }]);
+      }
+      setShowModal(false);
+      setNewEvent({
+        id: '',
+        title: '',
+        date: '',
+        startTime: '',
+        endTime: '',
+        description: '',
+      });
+    } catch (error) {
+      console.error('Error saving event: ', error);
+      alert('Failed to save event');
+    }
+  };
+
+  const handleEventEdit = (event: Event) => {
+    setEventToEdit(event);
+    setNewEvent(event);
+    setShowModal(true);
+  };
+
+  const handleEventDelete = async (eventId: string) => {
+    if (!user) {
+      alert('User is not authenticated');
+      return;
+    }
+    try {
+      await deleteDoc(doc(db, "users", user.uid, "events", eventId));
+      setEvents(events.filter(event => event.id !== eventId));
+    } catch (error) {
+      console.error('Error deleting event: ', error);
+      alert('Failed to delete event');
+    }
+  };
+
+  const handleSwipe = (event: React.TouchEvent, eventId: string) => {
+    const touch = event.changedTouches[0];
+    if (touch.clientX < window.innerWidth / 2) {
+      setSwipedEvent(eventId);
+    } else {
+      setSwipedEvent(null);
+    }
+  };
 
   return (
-    <>
-      <nav className="flex justify-between  border-b border-violet-100 p-1">
-        <h1>     </h1>
-      </nav>
-      <main className="flex  flex-col mx-1 ">
-        <div className="grid grid-cols-1">
-          <div className="">
-            <FullCalendar
-              locales={[jaLocale]}
-              locale={jaLocale}
-              plugins={[
-                dayGridPlugin,
-                interactionPlugin,
-                timeGridPlugin,
-                listPlugin,
-              ]}
-              
-              height={700}
-              headerToolbar={{
-                left: "prev,next",
-                center: "title",
-                right: "today",
+    <div className="container" style={{ height: `${viewportHeight - 120}px` }}>
+      <div className="header w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
+        <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
+          <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
+          <h2 className="text-lg font-bold text-white cursor-pointer">{`${currentYear}年${currentMonth + 1}月`}</h2>
+          <button className="text-gray-500" onClick={() => handleMonthChange(1)}>&gt;</button>
+        </div>
+        <div className="grid grid-cols-7 text-center border-t border-b bg-white">
+          {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
+            <div key={index} className="py-2 text-sm text-gray-700">{day}</div>
+          ))}
+        </div>
+        <div className="grid grid-cols-7 text-center bg-white">
+          {Array.from({ length: new Date(currentYear, currentMonth, 1).getDay() }).map((_, index) => (
+            <div key={index} className="py-2"></div>
+          ))}
+          {Array.from({ length: new Date(currentYear, currentMonth + 1, 0).getDate() }).map((_, dateIndex) => {
+            const date = dateIndex + 1;
+            const hasEvent = events.some((event) => new Date(event.date).getDate() === date && new Date(event.date).getMonth() === currentMonth && new Date(event.date).getFullYear() === currentYear);
+            const isToday = date === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+            return (
+              <div
+                key={dateIndex}
+                className={`py-2 relative cursor-pointer ${date === selectedDate ? 'bg-blue-500 text-white' : 'text-gray-900'} ${isToday && date !== selectedDate ? 'text-red-500' : ''}`}
+                onClick={() => handleDateClick(date)}
+              >
+                {date}
+                {hasEvent && <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 h-1 w-1 bg-red-500 rounded-full"></span>}
+              </div>
+            );
+          })}
+        </div>
+        <div className="p-4 border-t overflow-y-auto bg-white" style={{ maxHeight: 'calc(49vh)' }}>
+          <p>{selectedDate ? `${currentMonth + 1}月${selectedDate}日` : ''}</p>
+          {events.filter(event => new Date(event.date).getDate() === selectedDate && new Date(event.date).getMonth() === currentMonth && new Date(event.date).getFullYear() === currentYear)
+            .sort((a, b) => a.startTime.localeCompare(b.startTime)) // 開始時刻順に並べる
+            .map((event, index) => (
+              <div
+                key={index}
+                id={event.id}
+                className={`relative flex items-center p-2 bg-gray-100 rounded mb-2 cursor-pointer transition-transform ${swipedEvent === event.id ? 'translate-x-[-100px]' : 'translate-x-0'}`}
+                onTouchEnd={(e) => handleSwipe(e, event.id)}
+              >
+                <div className="flex-grow">
+                  <p>{`${event.startTime} - ${event.endTime}`}</p>
+                  <p>{event.title}</p>
+                  <p>{event.description}</p>
+                </div>
+                <div className={`absolute inset-y-0 right-0 flex items-center pr-3 space-x-2 transition-opacity ${swipedEvent === event.id ? 'opacity-100' : 'opacity-0'}`}>
+                  <button
+                    className="text-blue-500 hover:text-blue-700"
+                    onClick={() => handleEventEdit(event)}
+                  >
+                    <PencilIcon className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => handleEventDelete(event.id)}
+                  >
+                    <TrashIcon className="h-5 w-5" aria-hidden="true" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          {selectedDate && (
+            <button
+              className="mt-2 inline-flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-500 fixed bottom-24 right-8"
+              onClick={() => {
+                setEventToEdit(null);
+                setNewEvent({
+                  id: '',
+                  title: '',
+                  date: '',
+                  startTime: '',
+                  endTime: '',
+                  description: '',
+                });
+                setShowModal(true);
               }}
-              events={allEvents as EventSourceInput}
-              nowIndicator={true}
-              editable={true}
-              droppable={true}
-              selectable={true}
-              //
-              selectMirror={true}
-              //月表示でどのようにするかはここで設定する？
-              dateClick={handleDateClick}
-              //dataの中身は初期化された配列。そこをドロップできるようにしてる。
-              drop={(data) => addEvent(data)}
-              //ここで削除以外のイベントも設定できると思う。
-              eventClick={(data) => handleDeleteModal(data)}
-            />
-          </div>
+            >
+              <PlusIcon className="h-8 w-8" aria-hidden="true" />
+            </button>
+          )}
         </div>
 
-        {/*イベントの削除を確認するためのModal*/}
-        <Transition.Root show={showDeleteModal} as={Fragment}>
-          <Dialog
-            as="div"
-            className="relative z-10"
-            onClose={setShowDeleteModal}
-          >
+        <Transition.Root show={showModal} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={() => setShowModal(false)}>
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -181,9 +266,8 @@ export default function EventCalendar() {
             >
               <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
             </Transition.Child>
-
             <div className="fixed inset-0 z-10 overflow-y-auto">
-              <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
                 <Transition.Child
                   as={Fragment}
                   enter="ease-out duration-300"
@@ -193,151 +277,73 @@ export default function EventCalendar() {
                   leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                   leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
                 >
-                  <Dialog.Panel
-                    className="relative transform overflow-hidden rounded-lg
-                    bg-white text-left shadow-xl transition-all mx-auto max-w-sm sm:w-full"
-                  >
-                    <div className="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
-                      <div className="sm:flex sm:items-start">
-                        <div
-                          className="mx-auto flex h-12 w-12 flex-shrink-0 items-center 
-                        justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10"
-                        >
-                          <ExclamationTriangleIcon
-                            className="h-6 w-6 text-red-600"
-                            aria-hidden="true"
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:max-w-lg sm:p-6 w-full">
+                    <div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
+                          {eventToEdit ? 'Edit Event' : 'Add Event'}
+                        </Dialog.Title>
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            name="title"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600"
+                            value={newEvent.title}
+                            onChange={handleEventChange}
+                            placeholder="Title"
+                          />
+                          <input
+                            type="time"
+                            name="startTime"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
+                            value={newEvent.startTime}
+                            onChange={handleEventChange}
+                            placeholder="Start Time"
+                          />
+                          <input
+                            type="time"
+                            name="endTime"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
+                            value={newEvent.endTime}
+                            onChange={handleEventChange}
+                            placeholder="End Time"
+                          />
+                          <textarea
+                            name="description"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
+                            value={newEvent.description}
+                            onChange={handleEventChange}
+                            placeholder="Description"
                           />
                         </div>
-                        <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
-                          <Dialog.Title
-                            as="h3"
-                            className="text-lg font-semibold leading-6 text-gray-900"
+                        <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            className="inline-flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                            onClick={handleEventSubmit}
+                            disabled={!newEvent.title || !newEvent.startTime || !newEvent.endTime}
                           >
-                            Delete Event
-                          </Dialog.Title>
-                          <div className="mt-2">
-                            <p className="text-base text-gray-500">
-                              Confirm that you want to delete this event.
-                            </p>
-                          </div>
+                            {eventToEdit ? 'Update' : 'Create'}
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-blue-600 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                            onClick={() => setShowModal(false)}
+                          >
+                            Cancel
+                          </button>
                         </div>
                       </div>
                     </div>
-                    <div className="bg-gray-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                      <button
-                        type="button"
-                        className="inline-flex w-full justify-center rounded-md bg-red-600 px-4 py-2 text-base 
-                      font-semibold text-white shadow-sm hover:bg-red-500 sm:ml-3 sm:w-auto"
-                        onClick={handleDelete}
-                      >
-                        Delete
-                      </button>
-                      <button
-                        type="button"
-                        className="mt-3 inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-gray-900 
-                      shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 sm:mt-0 sm:w-auto"
-                        onClick={handleCloseModal}
-                      >
-                        Cancel
-                      </button>
-                    </div>
                   </Dialog.Panel>
                 </Transition.Child>
               </div>
             </div>
           </Dialog>
         </Transition.Root>
-
-        {/* ここで、クリックしたらmodalを開いて、そのあとにmodalを閉じるとかを管理している。*/}
-        {/* transitionはheadless uiのやつ。*/}
-
-        <Transition.Root show={showModal} as={Fragment}>
-          <Dialog as="div" className="relative z-10" onClose={setShowModal}>
-            <Transition.Child
-              as={Fragment}
-              enter="ease-out duration-300"
-              enterFrom="opacity-0"
-              enterTo="opacity-100"
-              leave="ease-in duration-200"
-              leaveFrom="opacity-100"
-              leaveTo="opacity-0"
-            >
-              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
-            </Transition.Child>
-
-            <div className="fixed inset-0 overflow-y-auto">
-              <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
-                <Transition.Child
-                  as={Fragment}
-                  enter="ease-out duration-300"
-                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                  enterTo="opacity-100 translate-y-0 sm:scale-100"
-                  leave="ease-in duration-200"
-                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-                >
-                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:max-w-md sm:p-6">
-                    <div>
-                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
-                        <CheckIcon
-                          className="h-6 w-6 text-green-600"
-                          aria-hidden="true"
-                        />
-                      </div>
-                      <div className="mt-3 text-center sm:mt-5">
-                        <Dialog.Title
-                          as="h3"
-                          className="text-lg font-semibold leading-6 text-gray-900"
-                        >
-                          Add Event
-                        </Dialog.Title>
-                        {/* ここで追加を管理 */}
-                        <form onSubmit={handleSubmit}>
-                          <div className="mt-2">
-                            <input
-                              type="text"
-                              name="title"
-                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600"
-                              value={newEvent.title}
-                              onChange={handleChange}
-                              placeholder="Title"
-                            />
-
-                            <input
-                              type="text"
-                              name="description"
-                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600 mt-4"
-                              value={newEvent.description}
-                              onChange={handleChange}
-                              placeholder="Description"
-                            />
-                          </div>
-                          <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
-                            <button
-                              type="submit"
-                              className="inline-flex w-full justify-center rounded-md bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
-                              disabled={newEvent.title === ""}
-                            >
-                              Create
-                            </button>
-                            <button
-                              type="button"
-                              className="inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                              onClick={handleCloseModal}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </form>
-                      </div>
-                    </div>
-                  </Dialog.Panel>
-                </Transition.Child>
-              </div>
-            </div>
-          </Dialog>
-        </Transition.Root>
-      </main>
-    </>
+      </div>
+    </div>
   );
-}
+};
+
+export default Calendar;
