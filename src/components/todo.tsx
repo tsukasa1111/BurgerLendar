@@ -185,60 +185,62 @@ const ToDo: React.FC = () => {
         </button>
       </form>
       <ul style={styles.list}>
-        {items.map((item, index) => {
-          const daysLeft = calculateDaysLeft(item.dueDate);
-          return (
-            <li key={index} style={styles.listItem}>
-              <img
-                src="https://thumb.ac-illust.com/36/36ac3e42b8ed38dce15bc0ad7c5e9a1c_t.jpeg"
-                width={50}
-                height={50}
-                alt="hamburger-icon"
-                style={styles.icon}
-              />
-              {isEditMode ? (
-                <>
-                  <input
-                    type="text"
-                    value={item.text}
-                    onChange={(e) => {
-                      const updatedItems = items.map(it =>
-                        it.id === item.id ? { ...it, text: e.target.value } : it
-                      );
-                      setItems(updatedItems);
-                    }}
-                    style={styles.input}
-                  />
-                  <div style={styles.datePickerContainer}>
-                    <DatePicker
-                      selected={new Date(item.dueDate)}
-                      onChange={(date: Date) => {
+        {items
+          .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
+          .map((item, index) => {
+            const daysLeft = calculateDaysLeft(item.dueDate);
+            return (
+              <li key={index} style={styles.listItem}>
+                <img
+                  src="https://thumb.ac-illust.com/36/36ac3e42b8ed38dce15bc0ad7c5e9a1c_t.jpeg"
+                  width={50}
+                  height={50}
+                  alt="hamburger-icon"
+                  style={styles.icon}
+                />
+                {isEditMode ? (
+                  <>
+                    <input
+                      type="text"
+                      value={item.text}
+                      onChange={(e) => {
                         const updatedItems = items.map(it =>
-                          it.id === item.id ? { ...it, dueDate: formatDate(date) } : it
+                          it.id === item.id ? { ...it, text: e.target.value } : it
                         );
                         setItems(updatedItems);
                       }}
-                      customInput={<EventIcon style={styles.calendarIcon} />}
-                      popperClassName="date-picker-popper"
+                      style={styles.input}
                     />
-                  </div>
-                  <button onClick={() => handleDeleteItem(item.id)} style={styles.removeButton}>
-                    Delete
-                  </button>
-                </>
-              ) : (
-                <>
-                  <span>{item.text}</span>
-                  {item.dueDate && (
-                    <span style={{ ...styles.dueDate, ...getDueDateStyle(daysLeft) }}>
-                      {daysLeft < 0 ? ' (Past Due)' : ` (Due in ${daysLeft} days)`}
-                    </span>
-                  )}
-                </>
-              )}
-            </li>
-          );
-        })}
+                    <div style={styles.datePickerContainer}>
+                      <DatePicker
+                        selected={new Date(item.dueDate)}
+                        onChange={(date: Date) => {
+                          const updatedItems = items.map(it =>
+                            it.id === item.id ? { ...it, dueDate: formatDate(date) } : it
+                          );
+                          setItems(updatedItems);
+                        }}
+                        customInput={<EventIcon style={styles.calendarIcon} />}
+                        popperClassName="date-picker-popper"
+                      />
+                    </div>
+                    <button onClick={() => handleDeleteItem(item.id)} style={styles.removeButton}>
+                      Delete
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span>{item.text}</span>
+                    {item.dueDate && (
+                      <span style={{ ...styles.dueDate, ...getDueDateStyle(daysLeft) }}>
+                        {daysLeft < 0 ? ' (Past Due)' : ` (Due in ${daysLeft} days)`}
+                      </span>
+                    )}
+                  </>
+                )}
+              </li>
+            );
+          })}
       </ul>
     </div>
   );

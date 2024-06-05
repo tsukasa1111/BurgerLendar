@@ -4,7 +4,6 @@ import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { db, auth } from '../firebase/firebase';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-
 interface Event {
   id: string;
   title: string;
@@ -32,8 +31,17 @@ const Calendar = () => {
   });
   const [user, setUser] = useState<any>(null);
   const [swipedEvent, setSwipedEvent] = useState<string | null>(null);
+  const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
   useEffect(() => {
+    // ウィンドウの高さを取得し、viewportHeight状態を更新する関数
+    const handleResize = () => {
+      setViewportHeight(window.innerHeight);
+    };
+
+    window.addEventListener('resize', handleResize);
+    handleResize(); // 初期設定
+
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -43,7 +51,10 @@ const Calendar = () => {
       }
     });
 
-    return () => unsubscribe();
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      unsubscribe();
+    };
   }, []);
 
   const fetchEvents = async (userId: string) => {
@@ -157,8 +168,8 @@ const Calendar = () => {
   };
 
   return (
-    <div className="w-full flex flex-col items-start justify-start" style={{ height: 'calc(100vh - 120px)', backgroundColor: '#F9ECCB' }}>
-      <div className="w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
+    <div className="container" style={{ height: `${viewportHeight - 120}px` }}>
+      <div className="header w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
           <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
           <h2 className="text-lg font-bold text-white cursor-pointer">{`${currentYear}年${currentMonth + 1}月`}</h2>
@@ -184,7 +195,7 @@ const Calendar = () => {
                 onClick={() => handleDateClick(date)}
               >
                 {date}
-                {hasEvent && <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-blue-500 rounded-full"></div>}
+                {hasEvent && <span className="absolute bottom-1 left-1/2 transform -translate-x-1/2 h-1 w-1 bg-red-500 rounded-full"></span>}
               </div>
             );
           })}
@@ -209,16 +220,14 @@ const Calendar = () => {
                   <button
                     className="text-blue-500 hover:text-blue-700"
                     onClick={() => handleEventEdit(event)}
-                    style={{ width: '40px', height: '40px' }} // ボタンのサイズを大きくする
                   >
-                    <PencilIcon className="h-8 w-8" aria-hidden="true" />
+                    <PencilIcon className="h-5 w-5" aria-hidden="true" />
                   </button>
                   <button
                     className="text-red-500 hover:text-red-700"
                     onClick={() => handleEventDelete(event.id)}
-                    style={{ width: '40px', height: '40px' }} // ボタンのサイズを大きくする
                   >
-                    <TrashIcon className="h-8 w-8" aria-hidden="true" /> 
+                    <TrashIcon className="h-5 w-5" aria-hidden="true" />
                   </button>
                 </div>
               </div>
