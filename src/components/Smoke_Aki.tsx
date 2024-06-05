@@ -39,7 +39,7 @@ const Aki_Smoke: React.FC = () => {
         setShowCheckmark(true);
         setTimeout(() => {
           setShowCheckmark(false);
-          navigate('/task'); // 必要に応じて次のページに遷移
+          navigate('/home'); // 必要に応じて次のページに遷移
         }, 500); // 0.5秒後に次のページに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);

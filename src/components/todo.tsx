@@ -47,6 +47,13 @@ const ToDo: React.FC = () => {
     }
   };
 
+  const formatDate = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleAddItem = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!user) {
@@ -57,15 +64,13 @@ const ToDo: React.FC = () => {
       try {
         await addDoc(collection(db, "users", user.uid, "items"), {
           text: newItem,
-          dueDate: newDueDate.toISOString().split('T')[0],
+          dueDate: formatDate(newDueDate),
         });
-        alert('Item has been added!');
         setNewItem('');
         setNewDueDate(null);
         fetchItems(user.uid);
       } catch (error) {
         console.error('Error adding item: ', error);
-        alert('Failed to add item');
       }
     }
   };
@@ -75,13 +80,15 @@ const ToDo: React.FC = () => {
       alert('User is not authenticated');
       return;
     }
-    try {
-      await deleteDoc(doc(db, "users", user.uid, "items", itemId));
-      alert('Item has been deleted!');
-      fetchItems(user.uid);
-    } catch (error) {
-      console.error('Error deleting item: ', error);
-      alert('Failed to delete item');
+
+    const confirmDelete = window.confirm('Are you sure you want to delete this item?');
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, "users", user.uid, "items", itemId));
+        fetchItems(user.uid);
+      } catch (error) {
+        console.error('Error deleting item: ', error);
+      }
     }
   };
 
@@ -100,12 +107,10 @@ const ToDo: React.FC = () => {
         });
       });
       await batch.commit();
-      alert('Items have been updated!');
       setIsEditMode(false);
       fetchItems(user.uid);
     } catch (error) {
       console.error('Error updating items: ', error);
-      alert('Failed to update items');
     }
   };
 
@@ -161,13 +166,12 @@ const ToDo: React.FC = () => {
           required
         />
         <div style={styles.datePickerContainer}>
-        <DatePicker
-          selected={newDueDate}
-          onChange={(date: Date) => setNewDueDate(date)}
-          customInput={<EventIcon style={styles.calendarIcon} />}
-          popperClassName="date-picker-popper"
-        />
-
+          <DatePicker
+            selected={newDueDate}
+            onChange={(date: Date) => setNewDueDate(date)}
+            customInput={<EventIcon style={styles.calendarIcon} />}
+            popperClassName="date-picker-popper"
+          />
         </div>
         <button
           type="submit"
@@ -206,13 +210,17 @@ const ToDo: React.FC = () => {
                     style={styles.input}
                   />
                   <div style={styles.datePickerContainer}>
-                  <DatePicker
-                  selected={newDueDate}
-                  onChange={(date: Date) => setNewDueDate(date)}
-                  customInput={<EventIcon style={styles.calendarIcon} />}
-                  popperClassName="date-picker-popper"
-                  />
-
+                    <DatePicker
+                      selected={new Date(item.dueDate)}
+                      onChange={(date: Date) => {
+                        const updatedItems = items.map(it =>
+                          it.id === item.id ? { ...it, dueDate: formatDate(date) } : it
+                        );
+                        setItems(updatedItems);
+                      }}
+                      customInput={<EventIcon style={styles.calendarIcon} />}
+                      popperClassName="date-picker-popper"
+                    />
                   </div>
                   <button onClick={() => handleDeleteItem(item.id)} style={styles.removeButton}>
                     Delete
@@ -255,18 +263,18 @@ const styles = {
   } as CSSProperties,
   title: {
     fontSize: '2.5em',
-    color: '#003366', // Changed text color
-    fontWeight: 'bold', // Added bold text
+    color: '#003366',
+    fontWeight: 'bold',
   } as CSSProperties,
   addContainer: {
     display: 'flex',
     alignItems: 'center',
     width: '100%',
-    marginTop: '10px', // Top margin reduced
+    marginTop: '10px',
   } as CSSProperties,
   editButton: {
     padding: '10px 20px',
-    width: '80px', // Increased width for consistency
+    width: '80px',
     backgroundColor: '#003366',
     color: '#F9ECCB',
     border: 'none',
@@ -280,16 +288,16 @@ const styles = {
   list: {
     listStyleType: 'none' as const,
     padding: '0',
-    maxWidth: '100%', // Fixed width
+    maxWidth: '100%',
     overflowY: 'scroll' as const,
-    maxHeight: 'calc(100vh - 200px)', // Adjusted for header, footer, and padding
-    marginTop: '10px', // Top margin reduced
-    width: '100%', // Ensure full width for consistency
+    maxHeight: 'calc(100vh - 200px)',
+    marginTop: '10px',
+    width: '100%',
   } as CSSProperties,
   listItem: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between', // Added to space out items
+    justifyContent: 'space-between',
     padding: '10px 0',
     borderBottom: '1px solid #ddd',
     width: '100%',
@@ -307,7 +315,7 @@ const styles = {
   } as CSSProperties,
   datePickerContainer: {
     marginLeft: '10px',
-    width: '30px', // Set the width of the container to fit the icon
+    width: '30px',
   } as CSSProperties,
   calendarIcon: {
     fontSize: '1.5em',
@@ -337,8 +345,8 @@ const styles = {
   } as CSSProperties,
   dueDate: {
     marginLeft: '10px',
-    textAlign: 'right', 
-    flex: '1', 
+    textAlign: 'right',
+    flex: '1',
   } as CSSProperties,
 };
 

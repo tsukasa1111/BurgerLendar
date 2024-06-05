@@ -1,6 +1,6 @@
 import React, { useState, useEffect, Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { PlusIcon, PencilIcon } from '@heroicons/react/20/solid';
+import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { db, auth } from '../firebase/firebase';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
@@ -12,7 +12,6 @@ interface Event {
   startTime: string;
   endTime: string;
   description: string;
-  url: string;
 }
 
 const Calendar = () => {
@@ -30,9 +29,9 @@ const Calendar = () => {
     startTime: '',
     endTime: '',
     description: '',
-    url: '',
   });
   const [user, setUser] = useState<any>(null);
+  const [swipedEvent, setSwipedEvent] = useState<string | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -57,14 +56,12 @@ const Calendar = () => {
           id: doc.id,
           ...data
         };
-      }).filter(event => event.title && event.date && event.startTime && event.endTime);
+      });
       setEvents(eventsData);
     } catch (error) {
       console.error('Error fetching events: ', error);
     }
   };
-  
-  
 
   const handleDateClick = (date: number) => {
     setSelectedDate(date);
@@ -93,21 +90,20 @@ const Calendar = () => {
       alert('User is not authenticated');
       return;
     }
-  
-    if (!newEvent.title || !newEvent.date || !newEvent.startTime || !newEvent.endTime) {
-      alert('Please fill all fields');
+
+    if (!newEvent.title || !newEvent.startTime || !newEvent.endTime) {
+      alert('Please fill in the title, start time, and end time');
       return;
     }
-  
+
     const firestoreEvent = {
       title: newEvent.title,
       date: selectedDate ? `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(selectedDate).padStart(2, '0')}` : '',
       startTime: newEvent.startTime,
       endTime: newEvent.endTime,
       description: newEvent.description,
-      url: newEvent.url,
     };
-  
+
     try {
       if (eventToEdit) {
         await updateDoc(doc(db, "users", user.uid, "events", eventToEdit.id), firestoreEvent);
@@ -124,14 +120,12 @@ const Calendar = () => {
         startTime: '',
         endTime: '',
         description: '',
-        url: '',
       });
     } catch (error) {
       console.error('Error saving event: ', error);
       alert('Failed to save event');
     }
   };
-  
 
   const handleEventEdit = (event: Event) => {
     setEventToEdit(event);
@@ -153,20 +147,29 @@ const Calendar = () => {
     }
   };
 
+  const handleSwipe = (event: React.TouchEvent, eventId: string) => {
+    const touch = event.changedTouches[0];
+    if (touch.clientX < window.innerWidth / 2) {
+      setSwipedEvent(eventId);
+    } else {
+      setSwipedEvent(null);
+    }
+  };
+
   return (
-    <div className="w-full bg-white flex flex-col items-start justify-start" style={{ height: 'calc(100vh - 120px)' }}>
-      <div className="w-full max-w-6xl bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="flex items-center justify-between p-4">
+    <div className="w-full flex flex-col items-start justify-start" style={{ height: 'calc(100vh - 120px)', backgroundColor: '#F9ECCB' }}>
+      <div className="w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
+        <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
           <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
-          <h2 className="text-lg font-bold cursor-pointer">{`${currentYear}年${currentMonth + 1}月`}</h2>
+          <h2 className="text-lg font-bold text-white cursor-pointer">{`${currentYear}年${currentMonth + 1}月`}</h2>
           <button className="text-gray-500" onClick={() => handleMonthChange(1)}>&gt;</button>
         </div>
-        <div className="grid grid-cols-7 text-center border-t border-b">
+        <div className="grid grid-cols-7 text-center border-t border-b bg-white">
           {['日', '月', '火', '水', '木', '金', '土'].map((day, index) => (
             <div key={index} className="py-2 text-sm text-gray-700">{day}</div>
           ))}
         </div>
-        <div className="grid grid-cols-7 text-center">
+        <div className="grid grid-cols-7 text-center bg-white">
           {Array.from({ length: new Date(currentYear, currentMonth, 1).getDay() }).map((_, index) => (
             <div key={index} className="py-2"></div>
           ))}
@@ -186,23 +189,40 @@ const Calendar = () => {
             );
           })}
         </div>
-        <div className="p-4 border-t overflow-y-auto" style={{ maxHeight: 'calc(49vh)' }}>
+        <div className="p-4 border-t overflow-y-auto bg-white" style={{ maxHeight: 'calc(49vh)' }}>
           <p>{selectedDate ? `${currentMonth + 1}月${selectedDate}日` : ''}</p>
-          {events.filter(event => new Date(event.date).getDate() === selectedDate && new Date(event.date).getMonth() === currentMonth && new Date(event.date).getFullYear() === currentYear).map((event, index) => (
-            <div key={index} className="flex justify-between items-center p-2 bg-gray-100 rounded mb-2 cursor-pointer">
-              <div>
-                <p>{`${event.startTime} - ${event.endTime}`}</p>
-                <p>{event.title}</p>
-                <p>{event.description}</p>
-              </div>
-              <button
-                className="text-blue-500 hover:text-blue-700"
-                onClick={() => handleEventEdit(event)}
+          {events.filter(event => new Date(event.date).getDate() === selectedDate && new Date(event.date).getMonth() === currentMonth && new Date(event.date).getFullYear() === currentYear)
+            .sort((a, b) => a.startTime.localeCompare(b.startTime)) // 開始時刻順に並べる
+            .map((event, index) => (
+              <div
+                key={index}
+                id={event.id}
+                className={`relative flex items-center p-2 bg-gray-100 rounded mb-2 cursor-pointer transition-transform ${swipedEvent === event.id ? 'translate-x-[-100px]' : 'translate-x-0'}`}
+                onTouchEnd={(e) => handleSwipe(e, event.id)}
               >
-                <PencilIcon className="h-5 w-5" aria-hidden="true" />
-              </button>
-            </div>
-          ))}
+                <div className="flex-grow">
+                  <p>{`${event.startTime} - ${event.endTime}`}</p>
+                  <p>{event.title}</p>
+                  <p>{event.description}</p>
+                </div>
+                <div className={`absolute inset-y-0 right-0 flex items-center pr-3 space-x-2 transition-opacity ${swipedEvent === event.id ? 'opacity-100' : 'opacity-0'}`}>
+                  <button
+                    className="text-blue-500 hover:text-blue-700"
+                    onClick={() => handleEventEdit(event)}
+                    style={{ width: '40px', height: '40px' }} // ボタンのサイズを大きくする
+                  >
+                    <PencilIcon className="h-8 w-8" aria-hidden="true" />
+                  </button>
+                  <button
+                    className="text-red-500 hover:text-red-700"
+                    onClick={() => handleEventDelete(event.id)}
+                    style={{ width: '40px', height: '40px' }} // ボタンのサイズを大きくする
+                  >
+                    <TrashIcon className="h-8 w-8" aria-hidden="true" /> 
+                  </button>
+                </div>
+              </div>
+            ))}
           {selectedDate && (
             <button
               className="mt-2 inline-flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-500 fixed bottom-24 right-8"
@@ -215,7 +235,6 @@ const Calendar = () => {
                   startTime: '',
                   endTime: '',
                   description: '',
-                  url: '',
                 });
                 setShowModal(true);
               }}
@@ -259,7 +278,7 @@ const Calendar = () => {
                           <input
                             type="text"
                             name="title"
-                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600"
                             value={newEvent.title}
                             onChange={handleEventChange}
                             placeholder="Title"
@@ -267,7 +286,7 @@ const Calendar = () => {
                           <input
                             type="time"
                             name="startTime"
-                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600 mt-4"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
                             value={newEvent.startTime}
                             onChange={handleEventChange}
                             placeholder="Start Time"
@@ -275,22 +294,14 @@ const Calendar = () => {
                           <input
                             type="time"
                             name="endTime"
-                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600 mt-4"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
                             value={newEvent.endTime}
                             onChange={handleEventChange}
                             placeholder="End Time"
                           />
-                          <input
-                            type="url"
-                            name="url"
-                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600 mt-4"
-                            value={newEvent.url}
-                            onChange={handleEventChange}
-                            placeholder="URL"
-                          />
                           <textarea
                             name="description"
-                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600 mt-4"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
                             value={newEvent.description}
                             onChange={handleEventChange}
                             placeholder="Description"
@@ -299,7 +310,7 @@ const Calendar = () => {
                         <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
                           <button
                             type="button"
-                            className="inline-flex w-full justify-center rounded-md bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+                            className="inline-flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
                             onClick={handleEventSubmit}
                             disabled={!newEvent.title || !newEvent.startTime || !newEvent.endTime}
                           >
@@ -307,7 +318,7 @@ const Calendar = () => {
                           </button>
                           <button
                             type="button"
-                            className="inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                            className="inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-blue-600 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
                             onClick={() => setShowModal(false)}
                           >
                             Cancel
