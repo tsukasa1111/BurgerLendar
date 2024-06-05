@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import WebGL from './webGL/webGL';
 
 interface ProfileProps {
   name: string;
