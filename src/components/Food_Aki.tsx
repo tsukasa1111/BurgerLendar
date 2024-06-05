@@ -4,6 +4,8 @@ import { auth, db } from "../firebase/firebase"; // Import the initialized Fires
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // useNavigateをインポート
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import Akinator from "./akinator.png"; 
+import { Height } from '@mui/icons-material';
 
 const FoodAki: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
@@ -68,10 +70,12 @@ const FoodAki: React.FC = () => {
         ) : (
           <>
             <div style={styles.questionContainer}>
+              <img src={Akinator} alt="Akinator"  /> 
               <h2 style={styles.question}>質問2/5:</h2>
-              <p style={styles.subQuestion}>食事いつしますか？（複数選択可）</p>
+              <p style={styles.subQuestion}>食事をいつしますか？（複数選択可）</p>
             </div>
             <div style={styles.optionsContainer}>
+
               {['朝', '昼', '夜'].map(option => (
                 <button
                   key={option}

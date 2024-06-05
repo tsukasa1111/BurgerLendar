@@ -59,7 +59,7 @@ const Aki_Sleep: React.FC = () => {
         alert("Error saving selected option.");
       }
     } else {
-      alert("オプションを選択してください");
+      alert("数字を入力してください。");
     }
   };
 
