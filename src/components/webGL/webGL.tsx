@@ -3,10 +3,10 @@ import Unity, { UnityContext } from "react-unity-webgl";
 
 function Webgl() {
   const unityContext = new UnityContext({
-    loaderUrl: "unity/test6.loader.js",
-    dataUrl: "unity/test6.data",
-    frameworkUrl: "unity/test6.framework.js",
-    codeUrl: "unity/test6.wasm",
+    loaderUrl: "unity/test8.loader.js",
+    dataUrl: "unity/test8.data",
+    frameworkUrl: "unity/test8.framework.js",
+    codeUrl: "unity/test8.wasm",
   });
 
   const burgerConfig = {
