@@ -337,8 +337,8 @@ const styles = {
   } as CSSProperties,
   dueDate: {
     marginLeft: '10px',
-    textAlign: 'right', // Added to right-align the due date
-    flex: '1', // Ensure it takes available space to be right-aligned
+    textAlign: 'right', 
+    flex: '1', 
   } as CSSProperties,
 };
 
