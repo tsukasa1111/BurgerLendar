@@ -166,197 +166,198 @@ const Profile: React.FC = () => {
 
   return (
     <div className="profile-container" style={{ height: `${viewportHeight - 120}px` }}>
-      <div className="profile-header">
-        <h2>Profile</h2>
-        <button className="edit-button" onClick={toggleEditMode}>
-          {isEditing ? 'Save' : 'Edit'}
-        </button>
-      </div>
-      <div className="profile-picture-section">
-        <div className="profile-picture">
-          <span role="img" aria-label="burger">🍔</span>
-        </div>
-        <div className="edit-profile-text">My Burger</div>
-      </div>
-      <div className="profile-details">
-        {renderProfileRow('Name', profile.name, 'name', '')}
-        {renderProfileRow('Email', profile.email, 'email', '')}
-        <div className="profile-row">
-          <div className="profile-label">Bath</div>
-          <div className="profile-buttons">
-            {['朝', '昼', '夜'].map(time => (
-              <button
-                key={time}
-                onClick={() => handleFlagChange('bath', time as '朝' | '昼' | '夜')}
-                style={{
-                  backgroundColor: bathFlags[time as '朝' | '昼' | '夜'] ? '#f4a261' : '#f1faee',
-                  color: bathFlags[time as '朝' | '昼' | '夜'] ? '#000' : '#000', // 色を変更
-                  pointerEvents: isEditing ? 'auto' : 'none'
-                }}
-              >
-                {time}
-              </button>
-            ))}
-          </div>
-        </div>
-        <div className="profile-row">
-          <div className="profile-label">Food</div>
-          <div className="profile-buttons">
-            {['朝', '昼', '夜'].map(time => (
-              <button
-                key={time}
-                onClick={() => handleFlagChange('food', time as '朝' | '昼' | '夜')}
-                style={{
-                  backgroundColor: foodFlags[time as '朝' | '昼' | '夜'] ? '#f4a261' : '#f1faee',
-                  color: foodFlags[time as '朝' | '昼' | '夜'] ? '#000' : '#000', // 色を変更
-                  pointerEvents: isEditing ? 'auto' : 'none'
-                }}
-              >
-                {time}
-              </button>
-            ))}
-          </div>
-        </div>
-        {renderProfileRow('Laundry', profile.laundry, 'laundry', '回/週')}
-        {renderProfileRow('Sleep', profile.sleep, 'sleep', '時間/日')}
-        {renderProfileRow('Smoke', profile.smoke, 'smoke', '本/日')}
-      </div>
-      <style>{`
-        .profile-container {
-          width: 100vw;
-          display: flex;
-          flex-direction: column;
-          justify-content: flex-start;
-          border: 1px solid #ccc;
-          border-radius: 8px;
-          overflow: hidden;
-          font-family: Arial, sans-serif;
-          background-color: #fff;
-        }
-
-        .profile-header {
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          padding: 10px;
-          background-color: #003366;
-          color: #fff;
-          position: relative;
-        }
-
-        .edit-button {
-          position: absolute;
-          right: 10px;
-          background: none;
-          border: none;
-          font-size: 16px;
-          color: #fff;
-          cursor: pointer;
-        }
-
-        .profile-header h2 {
-          margin: 0;
-          font-size: 18px;
-        }
-
-        .profile-picture-section {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          align-items: center;
-          padding: 20px;
-          background-color: #F9ECCB;
-          flex-grow: 0;
-        }
-
-        .profile-picture {
-          width: 80px;
-          height: 80px;
-          border-radius: 50%;
-          background-color: #fff;
-          display: flex;
-          justify-content: center;
-          align-items: center;
-          font-size: 36px;
-        }
-
-        .edit-profile-text {
-          margin-top: 10px;
-          color: #003366;
-          font-size: 14px;
-        }
-
-        .profile-details {
-          background-color: #003366;
-          color: #F9ECCB;
-          flex-grow: 1;
-          overflow-y: auto;
-        }
-
-        .profile-row {
-          display: flex;
-          justify-content: space-between;
-          padding: 10px 15px;
-          border-bottom: 1px solid #fff;
-          align-items: center;
-          height: 50px; /* 全ての行の高さを揃える */
-          cursor: ${isEditing ? 'pointer' : 'default'};
-        }
-
-        .profile-label {
-          font-weight: bold;
-          font-size: 14px;
-        }
-
-        .profile-value, .profile-value-edit {
-          flex: 1;
-          text-align: right;
-          padding-right: 10px;
-          color: #F9ECCB;
-          font-size: 14px;
-        }
-
-        .profile-value-edit {
-          background: #003366;
-          border: none;
-          border-bottom: 1px solid #F9ECCB;
-          color: #F9ECCB;
-          font-size: 14px;
-        }
-
-        .profile-input-wrapper {
-          display: flex;
-          align-items: center;
-        }
-
-        .profile-unit {
-          margin-left: 5px;
-        }
-
-        .profile-buttons {
-          display: flex;
-          justify-content: flex-end;
-          width: 60%; /* ボタンのコンテナの幅を調整 */
-        }
-
-        .profile-buttons button {
-          margin-left: 5px; /* ボタン間のスペースを狭く */
-          padding: 5px 10px;
-          border: none;
-          border-radius: 4px;
-          cursor: pointer;
-          transition: background-color 0.3s;
-          color: #000;
-        }
-
-        .profile-row[data-field="laundry"] .profile-label,
-        .profile-row[data-field="sleep"] .profile-label,
-        .profile-row[data-field="smoke"] .profile-label {
-          font-size: 18px; /* ラベルの文字を大きく */
-        }
-      `}</style>
+    <div className="profile-header">
+      <h2>Profile</h2>
+      <button className="edit-button" onClick={toggleEditMode}>
+        {isEditing ? 'Save' : 'Edit'}
+      </button>
     </div>
-  );
+    <div className="profile-picture-section">
+      <div className="profile-picture">
+        <span role="img" aria-label="burger">🍔</span>
+      </div>
+      <div className="edit-profile-text">My Burger</div>
+    </div>
+    <div className="profile-details">
+      {renderProfileRow('Name', profile.name, 'name', '')}
+      {renderProfileRow('Email', profile.email, 'email', '')}
+      <div className="profile-row">
+        <div className="profile-label">Bath</div>
+        <div className="profile-buttons">
+          {['朝', '昼', '夜'].map(time => (
+            <button
+              key={time}
+              onClick={() => handleFlagChange('bath', time as '朝' | '昼' | '夜')}
+              style={{
+                backgroundColor: bathFlags[time as '朝' | '昼' | '夜'] ? '#f4a261' : '#f1faee',
+                color: bathFlags[time as '朝' | '昼' | '夜'] ? '#000' : '#000', // 色を変更
+                pointerEvents: isEditing ? 'auto' : 'none'
+              }}
+            >
+              {time}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className="profile-row">
+        <div className="profile-label">Food</div>
+        <div className="profile-buttons">
+          {['朝', '昼', '夜'].map(time => (
+            <button
+              key={time}
+              onClick={() => handleFlagChange('food', time as '朝' | '昼' | '夜')}
+              style={{
+                backgroundColor: foodFlags[time as '朝' | '昼' | '夜'] ? '#f4a261' : '#f1faee',
+                color: foodFlags[time as '朝' | '昼' | '夜'] ? '#000' : '#000', // 色を変更
+                pointerEvents: isEditing ? 'auto' : 'none'
+              }}
+            >
+              {time}
+            </button>
+          ))}
+        </div>
+      </div>
+      {renderProfileRow('Laundry', profile.laundry, 'laundry', '回/週')}
+      {renderProfileRow('Sleep', profile.sleep, 'sleep', '時間/日')}
+      {renderProfileRow('Smoke', profile.smoke, 'smoke', '本/日')}
+    </div>
+    <style>{`
+      .profile-container {
+        width: 100vw;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        overflow: hidden;
+        font-family: Arial, sans-serif;
+        background-color: #fff;
+      }
+
+      .profile-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 10px;
+        background-color: #003366;
+        color: #fff;
+        position: relative;
+      }
+
+      .edit-button {
+        position: absolute;
+        right: 10px;
+        background: none;
+        border: none;
+        font-size: 16px;
+        color: #fff;
+        cursor: pointer;
+      }
+
+      .profile-header h2 {
+        margin: 0;
+        font-size: 18px;
+      }
+
+      .profile-picture-section {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        background-color: #F9ECCB;
+        flex-grow: 0;
+      }
+
+      .profile-picture {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        background-color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 36px;
+      }
+
+      .edit-profile-text {
+        margin-top: 10px;
+        color: #003366;
+        font-size: 14px;
+      }
+
+      .profile-details {
+        background-color: #003366;
+        color: #F9ECCB;
+        flex-grow: 1;
+        overflow-y: auto;
+      }
+
+      .profile-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 15px;
+        border-bottom: 1px solid #fff;
+        align-items: center;
+        height: 50px; /* 全ての行の高さを揃える */
+        cursor: ${isEditing ? 'pointer' : 'default'};
+      }
+
+      .profile-label {
+        font-weight: bold;
+        font-size: 14px;
+      }
+
+      .profile-value, .profile-value-edit {
+        flex: 1;
+        text-align: right;
+        padding-right: 10px;
+        color: #F9ECCB;
+        font-size: 14px;
+      }
+
+      .profile-value-edit {
+        background: #003366;
+        border: none;
+        border-bottom: 1px solid #F9ECCB;
+        color: #F9ECCB;
+        font-size: 14px;
+      }
+
+      .profile-input-wrapper {
+        display: flex;
+        align-items: center;
+      }
+
+      .profile-unit {
+        margin-left: 5px;
+      }
+
+      .profile-buttons {
+        display: flex;
+        justify-content: flex-end;
+        width: 60%; /* ボタンのコンテナの幅を調整 */
+      }
+
+      .profile-buttons button {
+        margin-left: 5px; /* ボタン間のスペースを狭く */
+        padding: 5px 10px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+        color: #000;
+      }
+
+      .profile-row[data-field="laundry"] .profile-label,
+      .profile-row[data-field="sleep"] .profile-label,
+      .profile-row[data-field="smoke"] .profile-label {
+        font-size: 18px; /* ラベルの文字を大きく */
+      }
+    `}</style>
+  </div>
+);
 };
 
 export default Profile;
+
