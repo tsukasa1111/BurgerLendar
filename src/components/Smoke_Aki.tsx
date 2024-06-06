@@ -1,15 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import Akinator from "./akinator.png"; // 画像のインポート
 
 const Aki_Smoke: React.FC = () => {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
+  const [hovered, setHovered] = useState<boolean>(false);
   const navigate = useNavigate();
+  const [cigarettesPerDay, setCigarettesPerDay] = useState<number | "">("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -19,8 +21,10 @@ const Aki_Smoke: React.FC = () => {
     return () => unsubscribe();
   }, []);
 
-  const handleOptionSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedOption(event.target.value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // 数字以外の文字を削除してセット
+    setCigarettesPerDay(value === "" ? "" : Number(value.replace(/\D/g, "")));
   };
 
   const handleSubmit = async () => {
@@ -29,17 +33,21 @@ const Aki_Smoke: React.FC = () => {
       return;
     }
 
-    if (selectedOption) {
+    if (cigarettesPerDay !== "") {
       try {
         const userSmokeRef = doc(db, "Users_Aki", user.uid);
-        await setDoc(userSmokeRef, {
-          smoke: selectedOption,
-          created_at: serverTimestamp()
-        }, { merge: true });
+        await setDoc(
+          userSmokeRef,
+          {
+            smoke: cigarettesPerDay,
+            created_at: serverTimestamp(),
+          },
+          { merge: true }
+        );
         setShowCheckmark(true);
         setTimeout(() => {
           setShowCheckmark(false);
-          navigate('/task'); // 必要に応じて次のページに遷移
+          navigate('/home'); // 必要に応じて次のページに遷移
         }, 500); // 0.5秒後に次のページに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);
@@ -50,14 +58,13 @@ const Aki_Smoke: React.FC = () => {
     }
   };
 
-  const options = Array.from({ length: 51 }, (_, i) => `${i}本`);
-
   return (
     <div style={styles.container}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
       <main style={styles.main}>
+        <img src={Akinator} alt="My Image" />
         {showCheckmark ? (
           <CheckCircleOutlineIcon style={styles.checkmark} />
         ) : (
@@ -67,23 +74,28 @@ const Aki_Smoke: React.FC = () => {
               <p style={styles.subQuestion}>タバコ1日に何本吸いますか？</p>
             </div>
             <div style={styles.optionsContainer}>
-              <select style={styles.selectBox} onChange={handleOptionSelect}>
-                <option value="">選択してください</option>
-                {options.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                id="cigarettes"
+                value={cigarettesPerDay}
+                onChange={handleChange}
+              />
+              <p style={styles.subQuestion}>本/日</p>
             </div>
             <button
+              onClick={handleSubmit}
+              disabled={cigarettesPerDay === ""}
               style={{
                 ...styles.submitButton,
-                backgroundColor: selectedOption ? '#f4a261' : '#ccc',
-                cursor: selectedOption ? 'pointer' : 'not-allowed',
+                backgroundColor: cigarettesPerDay === "" ? "#ccc" : "#f4a261",
+                cursor: cigarettesPerDay === "" ? "not-allowed" : "pointer",
               }}
-              onClick={handleSubmit}
-              disabled={!selectedOption}
+              onMouseEnter={() => {
+                setHovered(true);
+              }}
+              onMouseLeave={() => {
+                setHovered(false);
+              }}
             >
               決定
             </button>
@@ -96,71 +108,70 @@ const Aki_Smoke: React.FC = () => {
 
 const styles = {
   container: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 'calc(100vh - 60px)',
-    backgroundColor: '#1d3557',
-    color: '#f4a261',
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "calc(100vh - 60px)",
+    backgroundColor: "#1d3557",
+    color: "#f4a261",
   },
   header: {
-    width: '100%',
-    textAlign: 'center' as 'center',
-    backgroundColor: '#1d3557',
-    padding: '10px 0',
+    width: "100%",
+    textAlign: "center" as "center",
+    backgroundColor: "#1d3557",
+    padding: "10px 0",
   },
   title: {
-    fontSize: '2.5em',
-    margin: '0',
+    fontSize: "2.5em",
+    margin: "0",
   },
   main: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    backgroundColor: '#f1faee',
-    padding: '20px',
-    borderRadius: '10px',
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    backgroundColor: "#f1faee",
+    padding: "20px",
+    borderRadius: "10px",
   },
   questionContainer: {
-    textAlign: 'center' as 'center',
-    marginBottom: '20px',
+    textAlign: "center" as "center",
+    marginBottom: "20px",
   },
   question: {
-    fontSize: '1.5em',
-    margin: '0',
-    color: '#000',
+    fontSize: "1.5em",
+    margin: "0",
+    color: "#000",
   },
   subQuestion: {
-    fontSize: '1em',
-    margin: '0',
-    color: '#000',
+    fontSize: "1em",
+    margin: "0",
+    color: "#000",
   },
   optionsContainer: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    width: '100%',
-    alignItems: 'center',
-  },
-  selectBox: {
-    width: '80%',
-    padding: '10px',
-    margin: '10px 0',
-    borderRadius: '5px',
-    fontSize: '1em',
+    display: "flex",
+    flexDirection: "column" as "column",
+    width: "100%",
+    alignItems: "center",
   },
   submitButton: {
-    color: '#1d3557',
-    border: 'none',
-    padding: '10px 20px',
-    margin: '20px 0 0 0',
-    fontSize: '1em',
-    borderRadius: '5px',
+    color: "#1d3557",
+    border: "none",
+    padding: "10px 20px",
+    margin: "20px 0 0 0",
+    fontSize: "1em",
+    borderRadius: "5px",
   },
   checkmark: {
-    fontSize: '4em',
-    color: '#f4a261',
+    fontSize: "4em",
+    color: "#f4a261",
   },
+  // submitButton: {
+  //   // existing styles
+  //   "&:hover": {
+  //     backgroundColor: hovered ? "#ffa94d" : cigarettesPerDay === "" ? "#ccc" : "#f4a261",
+  //   },
+  // },
 };
 
 export default Aki_Smoke;

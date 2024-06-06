@@ -1,14 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import Akinator from "./akinator.png"; //
 
 const Aki_Sleep: React.FC = () => {
-  const [selectedOption, setSelectedOption] = useState<string | null>(null);
+  const [sleepPerDay, setSleepPerDay] = useState<number | "">("");
   const [user, setUser] = useState<any>(null);
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
+  const [hovered, setHovered] = useState<boolean>(false);
   const navigate = useNavigate();
 
   // Monitor auth state
@@ -19,9 +21,15 @@ const Aki_Sleep: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
-
-  const handleOptionSelect = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedOption(event.target.value);
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    // 数字以外の文字を削除してセット
+    const V = Number(value.replace(/\D/g, ""));
+    if (V >= 0 && V <= 24) {
+      setSleepPerDay(value === "" ? "" : Number(value.replace(/\D/g, "")));
+    } else {
+      alert("0から24の数字を入力してください");
+    }
   };
 
   const handleSubmit = async () => {
@@ -30,28 +38,32 @@ const Aki_Sleep: React.FC = () => {
       return;
     }
 
-    if (selectedOption) {
+    if (sleepPerDay !== "") {
       try {
         const userSleepRef = doc(db, "Users_Aki", user.uid);
-        await setDoc(userSleepRef, {
-          sleep: selectedOption,
-          created_at: serverTimestamp()
-        }, { merge: true });
+        await setDoc(
+          userSleepRef,
+          {
+            sleep: sleepPerDay,
+            created_at: serverTimestamp(),
+          },
+          { merge: true }
+        );
         setShowCheckmark(true);
         setTimeout(() => {
           setShowCheckmark(false);
-          navigate('/smoke');
+          navigate("/smoke");
         }, 500); // 0.5秒後に次のページに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);
         alert("Error saving selected option.");
       }
     } else {
-      alert("オプションを選択してください");
+      alert("数字を入力してください。");
     }
   };
 
-  const options = Array.from({ length: 13 }, (_, i) => `${i}h`);
+  const options = Array.from({ length: 13 }, (_, i) => i); // Changed to numbers
 
   return (
     <div style={styles.container}>
@@ -64,27 +76,33 @@ const Aki_Sleep: React.FC = () => {
         ) : (
           <>
             <div style={styles.questionContainer}>
+              <img src={Akinator} alt="My Image" />
               <h2 style={styles.question}>質問4/5:</h2>
               <p style={styles.subQuestion}>睡眠どれくらいしますか？</p>
             </div>
             <div style={styles.optionsContainer}>
-              <select style={styles.selectBox} onChange={handleOptionSelect}>
-                <option value="">選択してください</option>
-                {options.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
+              <input
+                type="text"
+                id="cigarettes"
+                value={sleepPerDay}
+                onChange={handleChange}
+              />
+              <p style={styles.subQuestion}>時間/日</p>
             </div>
             <button
+              onClick={handleSubmit}
+              disabled={sleepPerDay === ""}
               style={{
                 ...styles.submitButton,
-                backgroundColor: selectedOption ? '#f4a261' : '#ccc',
-                cursor: selectedOption ? 'pointer' : 'not-allowed',
+                backgroundColor: sleepPerDay === "" ? "#ccc" : "#f4a261",
+                cursor: sleepPerDay === "" ? "not-allowed" : "pointer",
               }}
-              onClick={handleSubmit}
-              disabled={!selectedOption}
+              onMouseEnter={() => {
+                setHovered(true);
+              }}
+              onMouseLeave={() => {
+                setHovered(false);
+              }}
             >
               決定
             </button>
@@ -97,70 +115,71 @@ const Aki_Sleep: React.FC = () => {
 
 const styles = {
   container: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 'calc(100vh - 60px)',
-    backgroundColor: '#1d3557',
-    color: '#f4a261',
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "calc(100vh - 60px)",
+    backgroundColor: "#1d3557",
+    color: "#f4a261",
   },
   header: {
-    width: '100%',
-    textAlign: 'center' as 'center',
-    backgroundColor: '#1d3557',
-    padding: '10px 0',
+    width: "100%",
+    textAlign: "center" as "center",
+    backgroundColor: "#1d3557",
+    padding: "10px 0",
   },
   title: {
-    fontSize: '2.5em',
-    margin: '0',
+    fontSize: "2.5em",
+    margin: "0",
   },
   main: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    backgroundColor: '#f1faee',
-    padding: '20px',
-    borderRadius: '10px',
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    backgroundColor: "#f1faee",
+    padding: "20px",
+    borderRadius: "10px",
   },
   questionContainer: {
-    textAlign: 'center' as 'center',
-    marginBottom: '20px',
+    textAlign: "center" as "center",
+    marginBottom: "20px",
   },
   question: {
-    fontSize: '1.5em',
-    margin: '0',
-    color: '#000',
+    fontSize: "1.5em",
+    margin: "0",
+    color: "#000",
   },
   subQuestion: {
-    fontSize: '1em',
-    margin: '0',
-    color: '#000',
+    fontSize: "1em",
+    margin: "0",
+    color: "#000",
   },
   optionsContainer: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    width: '100%',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "column" as "column",
+    width: "100%",
+    alignItems: "center",
   },
   selectBox: {
-    width: '80%',
-    padding: '10px',
-    margin: '10px 0',
-    borderRadius: '5px',
-    fontSize: '1em',
+    width: "80%",
+    padding: "10px",
+    margin: "10px 0",
+    borderRadius: "5px",
+    fontSize: "1em",
   },
   submitButton: {
-    color: '#1d3557',
-    border: 'none',
-    padding: '10px 20px',
-    margin: '20px 0 0 0',
-    fontSize: '1em',
-    borderRadius: '5px',
+    color: "#1d3557",
+    border: "none",
+    padding: "10px 20px",
+    margin: "20px 0 0 0",
+    fontSize: "1em",
+    borderRadius: "5px",
+    transition: "background-color 0.3s", // Added transition for background color change
   },
   checkmark: {
-    fontSize: '4em',
-    color: '#f4a261',
+    fontSize: "4em",
+    color: "#f4a261",
   },
 };
 

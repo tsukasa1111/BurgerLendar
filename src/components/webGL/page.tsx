@@ -1,10 +1,10 @@
 import { useState } from "react";
-import WebGL from "./webGL";
+import Webgl from "./webGL";
 
-export default function WebGL_App() {
+export default function WebglApp() {
   return (
     <>
-      <WebGL></WebGL>
+      <Webgl></Webgl>
     </>
   );
 }

@@ -5,7 +5,7 @@ interface Message {
   role: "user" | "ai";
   content: string;
 }
-
+//just chat with GPT-3
 function Chat() {
   const [input, setInput] = useState<string>("");
   const [messages, setMessages] = useState<Message[]>([]);
