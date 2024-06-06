@@ -1,3 +1,4 @@
+
 import React from "react";
 import "./App.css";
 import Authun from "./components/Authun";
@@ -27,6 +28,7 @@ import Profile from "./components/Profile";
 import ModeSelector from "./components/ModeSelector";
 import WebglApp from "./components/webGL/page";
 
+
 function App() {
   return (
     <Router>
@@ -42,6 +44,7 @@ function App() {
             }
           />
            {/* <Route path="/home" element={<Home />} />  */}
+
           <Route path="/signup" element={<Authun />} />
           <Route path="/admin" element={<AddTabacco />} />
           <Route path="/task" element={<TaskManager />} />
