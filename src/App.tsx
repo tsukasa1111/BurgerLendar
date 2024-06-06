@@ -38,16 +38,7 @@ function App() {
           <Route
             path="/profile"
             element={
-              <Profile
-                name="Your Name"
-                username="YourUsername"
-                email="youremail@example.com"
-                bath="Once a day"
-                food="Vegetarian"
-                laundry="Weekly"
-                sleep="8 hours"
-                smoke="Non-smoker"
-              />
+              <Profile/>
             }
           />
            {/* <Route path="/home" element={<Home />} />  */}
