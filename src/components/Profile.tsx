@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase/firebase';
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import useViewportHeight from './hooks/useViewportHeight';
+import useViewportHeight from '../hooks/useViewportHeight';
 
 const Profile: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
@@ -178,6 +178,7 @@ const Profile: React.FC = () => {
       </div>
       <div className="edit-profile-text">My Burger</div>
     </div>
+
     <div className="profile-details">
       {renderProfileRow('Name', profile.name, 'name', '')}
       {renderProfileRow('Email', profile.email, 'email', '')}
