@@ -1,7 +1,6 @@
 import React from 'react';
 import './App.css';
 import Authun from './components/Authun';
-import Aiueoto from './components/Aiueoto';
 import Login from './components/Login';
 import AddTabacco from './components/AddTabacco';
 import Home from './components/Home';
