@@ -216,7 +216,7 @@ const Calendar = () => {
             );
           })}
         </div>
-        <div className="p-4 border-t overflow-y-auto bg-white" style={{ maxHeight: `${viewportHeight - 120}px` }}>
+        <div className="p-4 border-t overflow-y-auto bg-white" style={{ height: `${viewportHeight-440}px` }}>
           <p>{selectedDate ? `${currentMonth + 1}月${selectedDate}日` : ''}</p>
           {events.filter(event => new Date(event.date).getDate() === selectedDate && new Date(event.date).getMonth() === currentMonth && new Date(event.date).getFullYear() === currentYear)
             .sort((a, b) => {
