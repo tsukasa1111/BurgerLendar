@@ -21,9 +21,6 @@ import Memories from './components/memories';
 import Loading from './components/loading/welcometoBurger';
 import Profile from './components/Profile';
 import ModeSelector from './components/ModeSelector';
-import Chat from './components/chatGPT/page';
-import WebglApp  from './components/webGL/page';
-
 
 function App() {
   return (
@@ -33,7 +30,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/modeselector" element={<ModeSelector />} />
-          <Route path="/profile" element={<Profile name="Your Name" username="YourUsername" email="youremail@example.com" bath="Once a day" food="Vegetarian" laundry="Weekly" sleep="8 hours" smoke="Non-smoker" />} />
+          <Route path="/profile" element={<Profile /> }/>
           <Route path="/home" element={<Bur_Home />} />
           <Route path="/signup" element={<Authun />} />
           <Route path="/admin" element={<AddTabacco />} />
@@ -47,10 +44,6 @@ function App() {
           <Route path="/todo" element={<ToDo />} />
           <Route path="/memories" element={<Memories />} />
           <Route path="/loading" element={<Loading />} />          
-          <Route path="/memories" Component= {Memories} />
-          <Route path="/loading" Component= {Loading} />
-          <Route path="/chat" Component= {Chat} />
-          <Route path="/webgl" Component= {WebglApp} />
         </Routes>
       </div>
       <ConditionalFooter />
