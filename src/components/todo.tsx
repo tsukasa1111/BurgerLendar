@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import { db, auth } from '../firebase/firebase'; // Adjust the import based on your file structure
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, writeBatch } from "firebase/firestore";
+import { collection, addDoc, getDocs, deleteDoc, doc, query, writeBatch } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { CSSProperties } from 'react'; // Import CSSProperties from react
 import DatePicker from 'react-datepicker';
@@ -17,7 +17,6 @@ const ToDo: React.FC = () => {
   const [items, setItems] = useState<Item[]>([]);
   const [newItem, setNewItem] = useState<string>('');
   const [newDueDate, setNewDueDate] = useState<Date | null>(null);
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
@@ -35,7 +34,7 @@ const ToDo: React.FC = () => {
 
   const fetchItems = async (userId: string) => {
     try {
-      const q = query(collection(db, "users", userId, "items"));
+      const q = query(collection(db, "users", userId, "todos"));
       const querySnapshot = await getDocs(q);
       const itemsData = querySnapshot.docs.map(doc => ({
         id: doc.id,
@@ -62,7 +61,7 @@ const ToDo: React.FC = () => {
     }
     if (newDueDate) {
       try {
-        await addDoc(collection(db, "users", user.uid, "items"), {
+        await addDoc(collection(db, "users", user.uid, "todos"), {
           text: newItem,
           dueDate: formatDate(newDueDate),
         });
@@ -77,84 +76,22 @@ const ToDo: React.FC = () => {
 
   const handleDeleteItem = async (itemId: string) => {
     if (!user) {
-      alert('User is not authenticated');
+      alert('ユーザーが認証されていません');
       return;
     }
 
-    const confirmDelete = window.confirm('Are you sure you want to delete this item?');
-    if (confirmDelete) {
-      try {
-        await deleteDoc(doc(db, "users", user.uid, "items", itemId));
-        fetchItems(user.uid);
-      } catch (error) {
-        console.error('Error deleting item: ', error);
-      }
-    }
-  };
-
-  const handleUpdateItems = async () => {
-    if (!user) {
-      alert('User is not authenticated');
-      return;
-    }
     try {
-      const batch = writeBatch(db); // Updated to use writeBatch
-      items.forEach(item => {
-        const itemRef = doc(db, "users", user.uid, "items", item.id);
-        batch.update(itemRef, {
-          text: item.text,
-          dueDate: item.dueDate,
-        });
-      });
-      await batch.commit();
-      setIsEditMode(false);
+      await deleteDoc(doc(db, "users", user.uid, "todos", itemId));
       fetchItems(user.uid);
     } catch (error) {
-      console.error('Error updating items: ', error);
-    }
-  };
-
-  const toggleEditMode = () => {
-    if (isEditMode) {
-      handleUpdateItems();
-    } else {
-      setIsEditMode(true);
-    }
-  };
-
-  const calculateDaysLeft = (dueDate: string) => {
-    const today = new Date();
-    const due = new Date(dueDate);
-    const timeDiff = due.getTime() - today.getTime();
-    return Math.ceil(timeDiff / (1000 * 3600 * 24));
-  };
-
-  const getDueDateStyle = (daysLeft: number) => {
-    if (daysLeft <= 0) {
-      return { color: 'red' };
-    } else if (daysLeft <= 3) {
-      return { color: 'red' };
-    } else if (daysLeft <= 10) {
-      return { color: 'orange' };
-    } else {
-      return { color: 'black' };
+      console.error('アイテムの削除中にエラーが発生しました: ', error);
     }
   };
 
   return (
     <div style={styles.container}>
       <div style={styles.header}>
-        <h1 style={styles.title}>To do list</h1>
-        <button
-          onClick={toggleEditMode}
-          style={{
-            ...styles.editButton,
-            ...(newItem.trim() !== '' && newDueDate !== null ? styles.editButtonDisabled : {}),
-          }}
-          disabled={newItem.trim() !== '' && newDueDate !== null}
-        >
-          {isEditMode ? 'Save' : 'Edit'}
-        </button>
+        <h1 style={styles.todoTitle}>To do list</h1>
       </div>
       <form onSubmit={handleAddItem} style={styles.addContainer}>
         <input
@@ -184,63 +121,16 @@ const ToDo: React.FC = () => {
           Add
         </button>
       </form>
+
       <ul style={styles.list}>
-        {items
-          .sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime())
-          .map((item, index) => {
-            const daysLeft = calculateDaysLeft(item.dueDate);
-            return (
-              <li key={index} style={styles.listItem}>
-                <img
-                  src="https://thumb.ac-illust.com/36/36ac3e42b8ed38dce15bc0ad7c5e9a1c_t.jpeg"
-                  width={50}
-                  height={50}
-                  alt="hamburger-icon"
-                  style={styles.icon}
-                />
-                {isEditMode ? (
-                  <>
-                    <input
-                      type="text"
-                      value={item.text}
-                      onChange={(e) => {
-                        const updatedItems = items.map(it =>
-                          it.id === item.id ? { ...it, text: e.target.value } : it
-                        );
-                        setItems(updatedItems);
-                      }}
-                      style={styles.input}
-                    />
-                    <div style={styles.datePickerContainer}>
-                      <DatePicker
-                        selected={new Date(item.dueDate)}
-                        onChange={(date: Date) => {
-                          const updatedItems = items.map(it =>
-                            it.id === item.id ? { ...it, dueDate: formatDate(date) } : it
-                          );
-                          setItems(updatedItems);
-                        }}
-                        customInput={<EventIcon style={styles.calendarIcon} />}
-                        popperClassName="date-picker-popper"
-                      />
-                    </div>
-                    <button onClick={() => handleDeleteItem(item.id)} style={styles.removeButton}>
-                      Delete
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <span>{item.text}</span>
-                    {item.dueDate && (
-                      <span style={{ ...styles.dueDate, ...getDueDateStyle(daysLeft) }}>
-                        {daysLeft < 0 ? ' (Past Due)' : ` (Due in ${daysLeft} days)`}
-                      </span>
-                    )}
-                  </>
-                )}
-              </li>
-            );
-          })}
+        {items.map(item => (
+          <li key={item.id} style={styles.listItem}>
+            <span>{item.text} (Due: {item.dueDate})</span>
+            <button onClick={() => handleDeleteItem(item.id)} style={styles.removeButton}>
+              Remove
+            </button>
+          </li>
+        ))}
       </ul>
     </div>
   );
@@ -260,10 +150,10 @@ const styles = {
   header: {
     display: 'flex',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center', // 中央揃え
     width: '100%',
   } as CSSProperties,
-  title: {
+  todoTitle: {
     fontSize: '2.5em',
     color: '#003366',
     fontWeight: 'bold',
@@ -273,19 +163,6 @@ const styles = {
     alignItems: 'center',
     width: '100%',
     marginTop: '10px',
-  } as CSSProperties,
-  editButton: {
-    padding: '10px 20px',
-    width: '80px',
-    backgroundColor: '#003366',
-    color: '#F9ECCB',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-  } as CSSProperties,
-  editButtonDisabled: {
-    backgroundColor: '#A9A9A9',
-    cursor: 'not-allowed',
   } as CSSProperties,
   list: {
     listStyleType: 'none' as const,
@@ -304,9 +181,6 @@ const styles = {
     borderBottom: '1px solid #ddd',
     width: '100%',
     fontWeight: 'bold',
-  } as CSSProperties,
-  icon: {
-    marginRight: '10px',
   } as CSSProperties,
   input: {
     flex: '1',
@@ -344,11 +218,6 @@ const styles = {
     backgroundColor: '#CC3333',
     color: 'white',
     cursor: 'pointer',
-  } as CSSProperties,
-  dueDate: {
-    marginLeft: '10px',
-    textAlign: 'right',
-    flex: '1',
   } as CSSProperties,
 };
 
