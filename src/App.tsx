@@ -22,7 +22,8 @@ import Loading from './components/loading/welcometoBurger';
 import Profile from './components/Profile';
 import ModeSelector from './components/ModeSelector';
 import Chat from './components/chatGPT/page';
-import WebGL_App from './components/webGL/page';
+import WebglApp  from './components/webGL/page';
+
 
 function App() {
   return (
@@ -49,7 +50,7 @@ function App() {
           <Route path="/memories" Component= {Memories} />
           <Route path="/loading" Component= {Loading} />
           <Route path="/chat" Component= {Chat} />
-          <Route path="/webgl" Component= {WebGL_App} />
+          <Route path="/webgl" Component= {WebglApp} />
         </Routes>
       </div>
       <ConditionalFooter />
@@ -59,7 +60,7 @@ function App() {
 
 function ConditionalFooter() {
   const location = useLocation();
-  const footerPaths = ['/home', '/calendar', '/todo', '/memories' ,'/profile','/modeselector' ,"/"]; // フッターを表示するパスを指定
+  const footerPaths = ['/home', '/calendar', '/todo', '/memories' ,'/profile','/modeselector' ]; // フッターを表示するパスを指定
 
   if (!footerPaths.includes(location.pathname)) {
     return null;

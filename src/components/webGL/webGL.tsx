@@ -1,33 +1,36 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import Unity, { UnityContext } from "react-unity-webgl";
-import { useSelector } from "react-redux";
 
-function WebGL() {
+function Webgl() {
   const unityContext = new UnityContext({
-    loaderUrl: "unity/test.loader.js",
-    dataUrl: "unity/test.data",
-    frameworkUrl: "unity/test.framework.js",
-    codeUrl: "unity/test.wasm",
+    loaderUrl: "unity/test8.loader.js",
+    dataUrl: "unity/test8.data",
+    frameworkUrl: "unity/test8.framework.js",
+    codeUrl: "unity/test8.wasm",
   });
-  function moveRight() {
-    unityContext.send("Sphere", "MoveRight", 10);
-  }
-  function moveLeft() {
-    unityContext.send("Sphere", "MoveLeft", 10);
-  }
+
+  const burgerConfig = {
+    meatCount: 10,
+    cheeseCount: 2,
+    tomatoCount: 2,
+    lettuceCount: 2,
+  };
+
+  useEffect(() => {
+    unityContext.on("loaded", () => {
+      unityContext.send(
+        "Scripts",
+        "ConfigureBurger",
+        JSON.stringify(burgerConfig)
+      );
+    });
+  }, [unityContext]);
 
   return (
-    <>
-      <div style={{ position: "relative" }}>
-        <Unity
-          unityContext={unityContext}
-          style={{ width: 1280, height: 720 }}
-        />
-        <button onClick={moveRight}>MoveRight</button>
-        <button onClick={moveLeft}>MoveLeft</button>
-      </div>
-    </>
+    <div style={{ position: "relative" }}>
+      <Unity unityContext={unityContext} style={{ width: 640, height: 640 }} />
+    </div>
   );
 }
 
-export default WebGL;
+export default Webgl;
