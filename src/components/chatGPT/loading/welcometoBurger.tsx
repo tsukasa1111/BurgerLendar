@@ -6,7 +6,7 @@ import {
   DefoMotivationQuotes,
 } from "./data";
 import { useState, useEffect } from "react";
-import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
+import { auth, db } from "../../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 
 const Loading = (mode: string) => {

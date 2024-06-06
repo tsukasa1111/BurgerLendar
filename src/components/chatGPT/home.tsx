@@ -1,3 +1,4 @@
+import { WidthFull } from "@mui/icons-material";
 import React, { useState, useEffect, useRef } from "react";
 
 interface ScheduleEvent {
@@ -128,9 +129,8 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
   return (
     <div className="schedule-container">
       <h1>Today's Schedule</h1>
-      <h1></h1>
-
-      <div className="schedule-content">
+      
+      <div className="schedule-content" style={WidthFull}>
         <ul className="schedule-list">
           {sortedEvents.map((event, index) => {
             const isCurrent = currentEventIndex !== -1 && index === 0;

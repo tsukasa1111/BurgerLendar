@@ -18,32 +18,37 @@ function Chat() {
     event.preventDefault();
     const userMessage: Message = {
       role: "user",
-      content: input
+      content: input,
     };
 
     // ユーザーのメッセージを追加
-    setMessages(prevMessages => [...prevMessages, userMessage]);
+    setMessages((prevMessages) => [...prevMessages, userMessage]);
 
-    axios.post("https://api.openai.com/v1/chat/completions", {
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: input }],
-    }, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-      }
-    })
-    .then((response) => {
-      // APIからの返答を取得してステートに追加
-      const aiMessage: Message = {
-        role: "ai",
-        content: response.data.choices[0].message.content
-      };
-      setMessages(prevMessages => [...prevMessages, aiMessage]);
-    })
-    .catch((error) => {
-      console.error("Error fetching response:", error);
-    });
+    axios
+      .post(
+        "https://api.openai.com/v1/chat/completions",
+        {
+          model: "gpt-3.5-turbo",
+          messages: [{ role: "user", content: input }],
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
+          },
+        }
+      )
+      .then((response) => {
+        // APIからの返答を取得してステートに追加
+        const aiMessage: Message = {
+          role: "ai",
+          content: response.data.choices[0].message.content,
+        };
+        setMessages((prevMessages) => [...prevMessages, aiMessage]);
+      })
+      .catch((error) => {
+        console.error("Error fetching response:", error);
+      });
 
     // 入力フィールドをクリア
     setInput("");
