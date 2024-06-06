@@ -13,8 +13,10 @@ import {
 } from "@mui/material";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { teal } from "@mui/material/colors";
-import { Link as RouterLink, useNavigate } from "react-router-dom"; // react-router-domからuseNavigateをインポート
+import { Link as RouterLink, useNavigate } from "react-router-dom";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { db } from "../firebase/firebase";
 
 export const Login = () => {
   const [email, setEmail] = useState("");
@@ -30,9 +32,31 @@ export const Login = () => {
   const handleLogin = async () => {
     const auth = getAuth();
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      navigate("/home");
+      console.log("Attempting to sign in...");
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      console.log("User signed in:", user);
+
+      // カレンダーの存在を確認するロジックを追加
+      const today = new Date();
+      const yy = String(today.getFullYear()).slice(-2);
+      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2, '0');
+      const yymmdd = `${yy}${mm}${dd}`;
+      console.log("Checking for document with date:", yymmdd);
+
+      const docRef = doc(db, 'scedule', user.uid, 'dates', yymmdd);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        console.log("Document exists, navigating to /home");
+        navigate("/home");
+      } else {
+        console.log("Document does not exist, navigating to /modeselector");
+        navigate("/modeselector");
+      }
     } catch (error) {
+      console.error("Error during login or checking document existence:", error);
       setError("Failed to log in. Please check your credentials and try again.");
     }
   };

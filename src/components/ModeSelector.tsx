@@ -1,289 +1,219 @@
-import React, { useState, CSSProperties, useEffect } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import { Fragment, useEffect, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { EventSourceInput } from "@fullcalendar/core/index.js";
+import jaLocale from "@fullcalendar/core/locales/ja";
+import listPlugin from "@fullcalendar/list";
+import Burger from "./burger/burger";
+import { startOfDay, subDays } from "date-fns"; // date-fns ライブラリを利用
 
-import axios from "axios";
-
-interface Location {
-  latitude: number;
-  longitude: number;
+interface Event {
+  title: string;
+  start: Date | string;
+  allDay: boolean;
+  description: string;
+  id: number;
 }
 
-interface WeatherData {
-  name: string;
-  main: {
-    temp: number;
-  };
-  weather: {
-    description: string;
-  }[];
-}
+export default function Memories() {
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
-const ModeSelector: React.FC = () => {
-  const [selectedMode, setSelectedMode] = useState<string | null>(null);
-  const [confirmMode, setConfirmMode] = useState<string | null>(null);
-  const [location, setLocation] = useState<Location | null>(null);
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-
-  const modes = [
-    { id: "relax", label: "ゆるゆる日", icon: "😊", color: "#E48B63" },
-    { id: "normal", label: "ふつうの日", icon: "😐", color: "#E48B63" },
-    { id: "hard", label: "がんばる日", icon: "😤", color: "#E48B63" },
-  ];
-
-  const handleModeClick = (modeId: string) => {
-    setSelectedMode(modeId);
-    setConfirmMode(null);
-  };
-
-  const handleConfirmClick = (confirm: boolean) => {
-    if (confirm && selectedMode) {
-      setConfirmMode(selectedMode);
-    } else {
-      setSelectedMode(null);
-    }
-  };
+  const [newEvent, setNewEvent] = useState<Event>({
+    title: "",
+    start: "",
+    allDay: false,
+    id: 0,
+    description: "",
+  });
 
   useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude });
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-      }
-    );
+    const yesterday = subDays(new Date(), 1); // 昨日の日付を取得
+    const startOfToday = startOfDay(new Date()); // 今日の始まり
+
+    // 昨日までの日付にDoneを追加
+    let tempEvents: Event[] = [];
+    for (
+      let d = new Date(yesterday);
+      d <= startOfToday;
+      d.setDate(d.getDate() + 1)
+    ) {
+      tempEvents.push({
+        title: "DoneBurger",
+        start: new Date(d),
+        allDay: true,
+        description: "",
+        id: 0,
+      });
+    }
+    // イベントリストに追加
+    setAllEvents((prevEvents) => [...prevEvents, ...tempEvents]);
+    setAllEvents((prevEvents) => [...prevEvents, ...tempEvents]);
   }, []);
-  
-  useEffect(() => {
-    if (location) {
-      const API_KEY = process.env.REACT_APP_OPENWEATHERMAP_API_KEY;
-      const url = `https://api.openweathermap.org/data/2.5/weather?lon=${location.longitude}&lat=${location.latitude}&appid=${API_KEY}&lang=ja&units=metric`;
-      //const url = `https://api.openweathermap.org/data/2.5/weather?q=Tokyo&appid=${API_KEY}&lang=ja&units=metric`;
-      axios
-        .get<WeatherData>(url)
-        .then((response) => {
-          setWeatherData(response.data);
-        })
-        .catch((error) => {
-          console.error("Weather data fetching error:", error);
-        });
-    }
-  }, [location]);
+
+  //month表示から日をクリックしたときの処理
+  //新しいeventを作成して、現在時刻のタイムスタンプをidに設定している。
+  function handleDateClick(arg: { date: Date; allDay: boolean }) {
+    setNewEvent({
+      ...newEvent,
+      start: arg.date,
+      allDay: arg.allDay,
+      id: new Date().getTime(),
+    });
+    setShowModal(true);
+  }
+
+  //modalwindowを閉じる処理
+  //setNewEventでフォームをリセットすることで、過去の情報を残さない。
+  function handleCloseModal() {
+    setShowModal(false);
+    setNewEvent({
+      title: "",
+      start: "",
+      allDay: false,
+      id: 0,
+      description: "",
+    });
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setNewEvent({
+      ...newEvent,
+      title: e.target.value,
+    });
+  };
+
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setAllEvents([...allEvents, newEvent]);
+    setShowModal(false);
+    setNewEvent({
+      title: "",
+      start: "",
+      allDay: false,
+      id: 0,
+      description: "",
+    });
+  }
 
   return (
-    <div className="app" style={styles.app}>
-      
-
-      <div>
-        {weatherData ? (
-          <div>
-            <div className="weather-container" style={styles.weatherContainer}>
-              <div className="weather" style={styles.weather}>
-                <div className="weather-info" style={styles.weatherInfo}>
-                  <div className="date" style={styles.date}>
-                    Sun, 6/9
-                  </div>
-                  <div className="temperature" style={styles.temperature}>
-                    {weatherData.main.temp} °C
-                  </div>
-                  <div className="location" style={styles.location}> 
-                    {weatherData.name} {weatherData.weather[0].description} 
-                  </div>
-                  <div className="weather-icon">
-                    <img src={`https://openweathermap.org/img/wn/${(weatherData.weather[0] as { description: string; icon: string; }).icon}.png`} alt={weatherData.weather[0].description} />
-                  </div>
-                </div>
-                
-              </div>
-            </div>
-            
-          </div>
-        ) : (
-          <p>Loading...</p>
-        )}
-      </div>
-    
-
-      <div className="mode-selection" style={styles.modeSelection}>
-        <div className="title" style={styles.title}>
-          モード選択...
-        </div>
-        <div className="modes" style={styles.modes}>
-          {modes.map((mode) => (
-            <div
-              key={mode.id}
-              className={`mode ${selectedMode === mode.id ? "selected" : ""}`}
-              style={{
-                ...styles.mode,
-                ...(selectedMode === mode.id && {
-                  ...styles.selectedMode,
-                  backgroundColor: mode.color,
-                }),
+    <>
+      <nav className="flex justify-between mb-2 border-b border-violet-100 p-2">
+        <h1> </h1>
+      </nav>
+      <main className="flex min-h-screen flex-col items-center justify-between px-4 py-2">
+        <div className="grid grid-cols-1">
+          <div className="col-span-8">
+            <FullCalendar
+              locales={[jaLocale]}
+              locale={jaLocale}
+              plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
+              headerToolbar={{
+                left: "title,prev,next today",
+                center: "title",
+                right: "dayGridMonth",
               }}
-              onClick={() => handleModeClick(mode.id)}
+              events={allEvents as EventSourceInput}
+              nowIndicator={true}
+              editable={true}
+              selectable={true}
+              selectMirror={true}
+            />
+          </div>
+        </div>
+
+        {/* ここで、クリックしたらmodalを開いて、そのあとにmodalを閉じるとかを管理している。*/}
+        {/* transitionはheadless uiのやつ。*/}
+
+        <Transition.Root show={showModal} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={setShowModal}>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
             >
-              <div className="icon" style={styles.icon}>
-                {mode.icon}
-              </div>
-              <div className="label" style={styles.label}>
-                {mode.label}
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:max-w-md sm:p-6">
+                    <div>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-600"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title
+                          as="h3"
+                          className="text-lg font-semibold leading-6 text-gray-900"
+                        >
+                          Add Event
+                        </Dialog.Title>
+                        {/* ここで追加を管理 */}
+                        <form onSubmit={handleSubmit}>
+                          <div className="mt-2">
+                            <input
+                              type="text"
+                              name="title"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600"
+                              value={newEvent.title}
+                              onChange={handleChange}
+                              placeholder="Title"
+                            />
+                            <input
+                              type="text"
+                              name="description"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600 mt-4"
+                              value={newEvent.description}
+                              onChange={handleChange}
+                              placeholder="Description"
+                            />
+                          </div>
+                          <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
+                            <button
+                              type="submit"
+                              className="inline-flex w-full justify-center rounded-md bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+                              disabled={newEvent.title === ""}
+                            >
+                              Create
+                            </button>
+                            <button
+                              type="button"
+                              className="inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                              onClick={handleCloseModal}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {!selectedMode ? (
-        <div className="greeting" style={styles.greeting}>
-          <div className="greeting-text" style={styles.greetingText}>
-            GOOD MORNING!
-          </div>
-          <div className="burger" style={styles.burger}>
-            🍔
-          </div>
-        </div>
-      ) : (
-        <div className="confirmation" style={styles.confirmation}>
-          <div className="confirmation-text" style={styles.confirmationText}>
-            {modes.find((mode) => mode.id === selectedMode)?.label}
-            モードでいいか？
-          </div>
-          <div
-            className="confirmation-buttons"
-            style={styles.confirmationButtons}
-          >
-            <button
-              onClick={() => handleConfirmClick(true)}
-              style={styles.button}
-            >
-              Yes
-            </button>
-            <button
-              onClick={() => handleConfirmClick(false)}
-              style={styles.button}
-            >
-              No
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
+          </Dialog>
+        </Transition.Root>
+      </main>
+    </>
   );
-};
-
-const styles: { [key: string]: CSSProperties } = {
-  app: {
-    fontFamily: "Arial, sans-serif",
-    padding: "20px",
-    backgroundColor: "#F9ECCB",
-    color: "#333",
-    minHeight: "calc(100vh - 120px)",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  weatherContainer: {
-    backgroundColor: "#F9ECCB",
-    padding: "10px",
-    borderRadius: "8px",
-    display: "flex",
-    justifyContent: "center",
-    width: "100%",
-    maxWidth: "500px",
-  },
-  weather: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
-  },
-  weatherInfo: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-start",
-  },
-  date: {
-    fontSize: "14px",
-  },
-  temperature: {
-    fontSize: "20px",
-    fontWeight: "bold",
-  },
-  location: {
-    fontSize: "14px",
-  },
-  weatherIcon: {
-    fontSize: "32px",
-  },
-  modeSelection: {
-    marginTop: "20px",
-    textAlign: "center",
-    width: "100%",
-    maxWidth: "500px",
-  },
-  title: {
-    fontSize: "18px",
-    fontWeight: "bold",
-  },
-  modes: {
-    display: "flex",
-    justifyContent: "space-around",
-    marginTop: "10px",
-  },
-  mode: {
-    padding: "10px",
-    borderRadius: "8px",
-    backgroundColor: "#ccc",
-    cursor: "pointer",
-    flex: "1",
-    margin: "0 5px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  selectedMode: {
-    border: "2px solid #333",
-  },
-  icon: {
-    fontSize: "24px",
-  },
-  label: {
-    marginTop: "5px",
-    fontSize: "14px",
-  },
-  greeting: {
-    marginTop: "20px",
-    textAlign: "center",
-  },
-  greetingText: {
-    fontSize: "18px",
-    fontWeight: "bold",
-  },
-  burger: {
-    fontSize: "48px",
-    marginTop: "10px",
-  },
-  confirmation: {
-    marginTop: "20px",
-    textAlign: "center",
-  },
-  confirmationText: {
-    fontSize: "18px",
-    fontWeight: "bold",
-  },
-  confirmationButtons: {
-    marginTop: "10px",
-  },
-  button: {
-    margin: "0 5px",
-    padding: "10px 20px",
-    fontSize: "16px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    border: "none",
-    backgroundColor: "#333",
-    color: "#fff",
-  },
-};
-
-export default ModeSelector;
+}
