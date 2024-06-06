@@ -1,5 +1,5 @@
 import React from 'react';
-import {Quote,motivationQuotes} from './data';
+import {Quote,MotivationQuotes,NonMotivationQuotes,DefoMotivationQuotes} from './data';
 import { useState, useEffect } from 'react';
   
 
@@ -8,7 +8,7 @@ const Loading: React.FC = () => {
 const [quote, setQuote] = useState<Quote | null>(null);
 
   useEffect(() => {
-    const randomQuote = motivationQuotes[Math.floor(Math.random() * motivationQuotes.length)];
+    const randomQuote = MotivationQuotes[Math.floor(Math.random() * MotivationQuotes.length)];
     setQuote(randomQuote);
   }, []);
 
