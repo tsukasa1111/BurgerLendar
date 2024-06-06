@@ -252,7 +252,6 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
         }
       );
       
-      console.log(response.data.choices[0].message.content);
       setOutput(response.data.choices[0].message.content);
       setout(response.data.choices[0].message.content);
     } catch (error) {
