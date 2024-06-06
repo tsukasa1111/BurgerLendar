@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
 import {
   collection,
   doc,
@@ -11,8 +11,31 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
+import Home from "./home";
 import axios from "axios";
+import { CSSProperties } from 'react';
 
+interface Item {
+  id: string;
+  text: string;
+  dueDate: string;
+}
+
+interface Location {
+  latitude: number;
+  longitude: number;
+}
+
+interface WeatherData {
+  name: string;
+  main: {
+    temp: number;
+  };
+  weather: {
+    description: string;
+    icon: string;
+  }[];
+}
 interface EduProps {
   setOutput: (output: string) => void;
 }
