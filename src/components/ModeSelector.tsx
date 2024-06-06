@@ -1,514 +1,219 @@
-import axios from "axios";
-import React, { useState, useEffect, ChangeEvent, FormEvent } from 'react';
-import { db, auth } from '../firebase/firebase';
-import { collection, addDoc, getDocs, deleteDoc, doc, query, where, writeBatch } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
-import { CSSProperties } from 'react';
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import { Fragment, useEffect, useState } from "react";
+import { Dialog, Transition } from "@headlessui/react";
+import { CheckIcon, ExclamationTriangleIcon } from "@heroicons/react/20/solid";
+import { EventSourceInput } from "@fullcalendar/core/index.js";
+import jaLocale from "@fullcalendar/core/locales/ja";
+import listPlugin from "@fullcalendar/list";
+import Burger from "./burger/burger";
+import { startOfDay, subDays } from "date-fns"; // date-fns ライブラリを利用
 
-interface Item {
-  id: string;
-  text: string;
-  dueDate: string;
+interface Event {
+  title: string;
+  start: Date | string;
+  allDay: boolean;
+  description: string;
+  id: number;
 }
 
-interface Location {
-  latitude: number;
-  longitude: number;
-}
+export default function Memories() {
+  const [allEvents, setAllEvents] = useState<Event[]>([]);
+  const [showModal, setShowModal] = useState(false);
 
-interface WeatherData {
-  name: string;
-  main: {
-    temp: number;
-  };
-  weather: {
-    description: string;
-    icon: string;
-  }[];
-}
-
-const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Item[]>([]);
-  const [todos, setTodos] = useState<Item[]>([]);
-  const [newTask, setNewTask] = useState<string>('');
-  const [isEditMode, setIsEditMode] = useState<boolean>(false);
-  const [user, setUser] = useState<any>(null);
-  const [selectedMode, setSelectedMode] = useState<string | null>(null);
-  const [confirmMode, setConfirmMode] = useState<boolean>(false);
-  const [location, setLocation] = useState<Location | null>(null);
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-
-  const modes = [
-    { id: "relax", label: "ゆるゆる日", icon: "😊", color: "#E48B63" },
-    { id: "normal", label: "ふつうの日", icon: "😐", color: "#E48B63" },
-    { id: "hard", label: "がんばる日", icon: "😤", color: "#E48B63" },
-  ];
+  const [newEvent, setNewEvent] = useState<Event>({
+    title: "",
+    start: "",
+    allDay: false,
+    id: 0,
+    description: "",
+  });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-        fetchTasks(currentUser.uid);
-        fetchTodos(currentUser.uid);
-      } else {
-        setUser(null);
-      }
+    const yesterday = subDays(new Date(), 1); // 昨日の日付を取得
+    const startOfToday = startOfDay(new Date()); // 今日の始まり
+
+    // 昨日までの日付にDoneを追加
+    let tempEvents: Event[] = [];
+    for (
+      let d = new Date(yesterday);
+      d <= startOfToday;
+      d.setDate(d.getDate() + 1)
+    ) {
+      tempEvents.push({
+        title: "DoneBurger",
+        start: new Date(d),
+        allDay: true,
+        description: "",
+        id: 0,
+      });
+    }
+    // イベントリストに追加
+    setAllEvents((prevEvents) => [...prevEvents, ...tempEvents]);
+    setAllEvents((prevEvents) => [...prevEvents, ...tempEvents]);
+  }, []);
+
+  //month表示から日をクリックしたときの処理
+  //新しいeventを作成して、現在時刻のタイムスタンプをidに設定している。
+  function handleDateClick(arg: { date: Date; allDay: boolean }) {
+    setNewEvent({
+      ...newEvent,
+      start: arg.date,
+      allDay: arg.allDay,
+      id: new Date().getTime(),
     });
+    setShowModal(true);
+  }
 
-    return () => unsubscribe();
-  }, []);
+  //modalwindowを閉じる処理
+  //setNewEventでフォームをリセットすることで、過去の情報を残さない。
+  function handleCloseModal() {
+    setShowModal(false);
+    setNewEvent({
+      title: "",
+      start: "",
+      allDay: false,
+      id: 0,
+      description: "",
+    });
+  }
 
-  const fetchTasks = async (userId: string) => {
-    try {
-      const q = query(collection(db, "users", userId, "tasks"));
-      const querySnapshot = await getDocs(q);
-      const tasksData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        text: doc.data().text,
-        dueDate: doc.data().dueDate
-      })) as Item[];
-      setTasks(tasksData);
-    } catch (error) {
-      console.error('Error fetching tasks: ', error);
-    }
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    setNewEvent({
+      ...newEvent,
+      title: e.target.value,
+    });
   };
 
-  const fetchTodos = async (userId: string) => {
-    try {
-      const today = formatDate(new Date());
-      const q = query(
-        collection(db, "users", userId, "todos"),
-        where("dueDate", "==", today)
-      );
-      const querySnapshot = await getDocs(q);
-      const todosData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        text: doc.data().text,
-        dueDate: doc.data().dueDate
-      })) as Item[];
-      setTodos(todosData);
-    } catch (error) {
-      console.error('Error fetching todos: ', error);
-    }
-  };
-
-  const handleAddTask = async (e: FormEvent<HTMLFormElement>) => {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    if (!user) {
-      alert('User is not authenticated');
-      return;
-    }
-    const today = new Date();
-    const dueDate = formatDate(today);
-    try {
-      await addDoc(collection(db, "users", user.uid, "tasks"), {
-        text: newTask,
-        dueDate,
-      });
-      setNewTask('');
-      fetchTasks(user.uid);
-    } catch (error) {
-      console.error('Error adding task: ', error);
-    }
-  };
-
-  const handleDeleteTask = async (itemId: string) => {
-    if (!user) {
-      alert('User is not authenticated');
-      return;
-    }
-
-    try {
-      await deleteDoc(doc(db, "users", user.uid, "tasks", itemId));
-      fetchTasks(user.uid);
-    } catch (error) {
-      console.error('Error deleting task: ', error);
-    }
-  };
-
-  const handleDeleteTodo = async (itemId: string) => {
-    if (!user) {
-      alert('User is not authenticated');
-      return;
-    }
-
-    try {
-      await deleteDoc(doc(db, "users", user.uid, "todos", itemId));
-      fetchTodos(user.uid);
-    } catch (error) {
-      console.error('Error deleting todo: ', error);
-    }
-  };
-
-  const handleUpdateTasks = async () => {
-    if (!user) {
-      alert('User is not authenticated');
-      return;
-    }
-    try {
-      const batch = writeBatch(db);
-      tasks.forEach(task => {
-        const taskRef = doc(db, "users", user.uid, "tasks", task.id);
-        batch.update(taskRef, {
-          text: task.text,
-          dueDate: task.dueDate,
-        });
-      });
-      await batch.commit();
-      setIsEditMode(false);
-      fetchTasks(user.uid);
-    } catch (error) {
-      console.error('Error updating tasks: ', error);
-    }
-  };
-
-  const toggleEditMode = () => {
-    if (isEditMode) {
-      handleUpdateTasks();
-    } else {
-      setIsEditMode(true);
-    }
-  };
-
-  const formatDate = (date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  };
-
-  const handleModeClick = (modeId: string) => {
-    setSelectedMode(modeId);
-    setConfirmMode(true);
-  };
-
-  const handleConfirmClick = (confirm: boolean) => {
-    if (confirm && selectedMode) {
-      // Confirmed mode change
-    }
-    setConfirmMode(false);
-  };
-
-  useEffect(() => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setLocation({ latitude, longitude });
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-      }
-    );
-  }, []);
-
-  useEffect(() => {
-    if (location) {
-      const API_KEY = process.env.REACT_APP_OPENWEATHERMAP_API_KEY;
-      const url = `https://api.openweathermap.org/data/2.5/weather?lon=${location.longitude}&lat=${location.latitude}&appid=${API_KEY}&lang=ja&units=metric`;
-      axios
-        .get<WeatherData>(url)
-        .then((response) => {
-          setWeatherData(response.data);
-        })
-        .catch((error) => {
-          console.error("Weather data fetching error:", error);
-        });
-    }
-  }, [location]);
+    setAllEvents([...allEvents, newEvent]);
+    setShowModal(false);
+    setNewEvent({
+      title: "",
+      start: "",
+      allDay: false,
+      id: 0,
+      description: "",
+    });
+  }
 
   return (
-    <div style={styles.container}>
-      {weatherData ? (
-        <div className="weather-container" style={styles.weatherContainer}>
-          <div className="weather" style={styles.weather}>
-            <div className="weather-info" style={styles.weatherInfo}>
-              <div className="date" style={styles.date}>Sun, 6/9</div>
-              <div className="temperature" style={styles.temperature}>
-                {weatherData.main.temp} °C
-              </div>
-              <div className="location" style={styles.location}>
-                {weatherData.name} {weatherData.weather[0].description}
-              </div>
-              <div className="weather-icon">
-                <img src={`https://openweathermap.org/img/wn/${weatherData.weather[0].icon}.png`} alt={weatherData.weather[0].description} />
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        <p>Loading...</p>
-      )}
-
-      <div style={styles.header}>
-        <h1 style={styles.todoTitle}>To do list</h1>
-      </div>
-      <form onSubmit={handleAddTask} style={styles.addContainer}>
-        <input
-          type="text"
-          value={newTask}
-          onChange={(e: ChangeEvent<HTMLInputElement>) => setNewTask(e.target.value)}
-          placeholder="+Add..."
-          style={styles.input}
-          required
-        />
-        <button
-          type="submit"
-          style={{
-            ...styles.addButton,
-            ...(newTask.trim() === '' ? styles.addButtonDisabled : {}),
-          }}
-          disabled={newTask.trim() === ''}
-        >
-          Add
-        </button>
-      </form>
-
-      <ul style={styles.list}>
-        {tasks.map(task => (
-          <li key={task.id} style={styles.listItem}>
-            <span>{task.text} (Due: {task.dueDate})</span>
-            <button onClick={() => handleDeleteTask(task.id)} style={styles.removeButton}>
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <ul style={styles.list}>
-        {todos.map(todo => (
-          <li key={todo.id} style={styles.listItem}>
-            <span>{todo.text} (Due: {todo.dueDate})</span>
-            <button onClick={() => handleDeleteTodo(todo.id)} style={styles.removeButton}>
-              Remove
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <div className="mode-selection" style={styles.modeSelection}>
-        <div className="title" style={styles.title}>モード選択...</div>
-        <div className="modes" style={styles.modes}>
-          {modes.map((mode) => (
-            <div
-              key={mode.id}
-              className={`mode ${selectedMode === mode.id ? "selected" : ""}`}
-              style={{
-                ...styles.mode,
-                ...(selectedMode === mode.id && {
-                  ...styles.selectedMode,
-                  backgroundColor: mode.color,
-                }),
+    <>
+      <nav className="flex justify-between mb-2 border-b border-violet-100 p-2">
+        <h1> </h1>
+      </nav>
+      <main className="flex min-h-screen flex-col items-center justify-between px-4 py-2">
+        <div className="grid grid-cols-1">
+          <div className="col-span-8">
+            <FullCalendar
+              locales={[jaLocale]}
+              locale={jaLocale}
+              plugins={[dayGridPlugin, timeGridPlugin, listPlugin]}
+              headerToolbar={{
+                left: "title,prev,next today",
+                center: "title",
+                right: "dayGridMonth",
               }}
-              onClick={() => handleModeClick(mode.id)}
+              events={allEvents as EventSourceInput}
+              nowIndicator={true}
+              editable={true}
+              selectable={true}
+              selectMirror={true}
+            />
+          </div>
+        </div>
+
+        {/* ここで、クリックしたらmodalを開いて、そのあとにmodalを閉じるとかを管理している。*/}
+        {/* transitionはheadless uiのやつ。*/}
+
+        <Transition.Root show={showModal} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={setShowModal}>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
             >
-              <div className="icon" style={styles.icon}>{mode.icon}</div>
-              <div className="label" style={styles.label}>{mode.label}</div>
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            </Transition.Child>
+
+            <div className="fixed inset-0 overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:max-w-md sm:p-6">
+                    <div>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+                        <CheckIcon
+                          className="h-6 w-6 text-green-600"
+                          aria-hidden="true"
+                        />
+                      </div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title
+                          as="h3"
+                          className="text-lg font-semibold leading-6 text-gray-900"
+                        >
+                          Add Event
+                        </Dialog.Title>
+                        {/* ここで追加を管理 */}
+                        <form onSubmit={handleSubmit}>
+                          <div className="mt-2">
+                            <input
+                              type="text"
+                              name="title"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600"
+                              value={newEvent.title}
+                              onChange={handleChange}
+                              placeholder="Title"
+                            />
+                            <input
+                              type="text"
+                              name="description"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-violet-600 mt-4"
+                              value={newEvent.description}
+                              onChange={handleChange}
+                              placeholder="Description"
+                            />
+                          </div>
+                          <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
+                            <button
+                              type="submit"
+                              className="inline-flex w-full justify-center rounded-md bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-violet-600"
+                              disabled={newEvent.title === ""}
+                            >
+                              Create
+                            </button>
+                            <button
+                              type="button"
+                              className="inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                              onClick={handleCloseModal}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </form>
+                      </div>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
+              </div>
             </div>
-          ))}
-        </div>
-      </div>
-
-      {confirmMode && (
-        <div className="confirmation" style={styles.confirmation}>
-          <div className="confirmation-text" style={styles.confirmationText}>
-            {modes.find((mode) => mode.id === selectedMode)?.label}モードでいいか？
-          </div>
-          <div className="confirmation-buttons" style={styles.confirmationButtons}>
-            <button onClick={() => handleConfirmClick(true)} style={styles.button}>Yes</button>
-            <button onClick={() => handleConfirmClick(false)} style={styles.button}>No</button>
-          </div>
-        </div>
-      )}
-    </div>
+          </Dialog>
+        </Transition.Root>
+      </main>
+    </>
   );
-};
-
-const styles: { [key: string]: CSSProperties } = {
-  app: {
-    fontFamily: "Arial, sans-serif",
-    padding: "20px",
-    backgroundColor: "#F9ECCB",
-    color: "#333",
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  weatherContainer: {
-    backgroundColor: "#F9ECCB",
-    padding: "10px",
-    borderRadius: "8px",
-    display: "flex",
-    justifyContent: "center",
-    width: "100%",
-    maxWidth: "500px",
-    marginBottom: "20px",
-  },
-  weather: {
-    display: "flex",
-    justifyContent: "flex-end",
-    alignItems: "center",
-    width: "100%",
-  },
-  weatherInfo: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "flex-end",
-  },
-  date: {
-    fontSize: "14px",
-    textAlign: "right",
-  },
-  temperature: {
-    fontSize: "20px",
-    fontWeight: "bold",
-    textAlign: "right",
-  },
-  location: {
-    fontSize: "14px",
-    textAlign: "right",
-  },
-  weatherIcon: {
-    fontSize: "32px",
-  },
-  container: {
-    display: 'flex',
-    flexDirection: 'column' as const,
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    backgroundColor: '#F9ECCB',
-    color: '#000',
-    padding: '20px',
-    width: '100%',
-    maxWidth: '500px',
-    minHeight: "100vh",
-    marginBottom: "20px",
-  } as CSSProperties,
-  header: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: '100%',
-  } as CSSProperties,
-  todoTitle: {
-    fontSize: '2.5em',
-    color: '#003366',
-    fontWeight: 'bold',
-  } as CSSProperties,
-  addContainer: {
-    display: 'flex',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: '10px',
-  } as CSSProperties,
-  list: {
-    listStyleType: 'none' as const,
-    padding: '0',
-    maxWidth: '100%',
-    overflowY: 'scroll' as const,
-    maxHeight: 'calc(100vh - 200px)',
-    marginTop: '10px',
-    width: '100%',
-  } as CSSProperties,
-  listItem: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: '10px 0',
-    borderBottom: '1px solid #ddd',
-    width: '100%',
-    fontWeight: 'bold',
-  } as CSSProperties,
-  input: {
-    flex: '1',
-    width: '150px',
-    padding: '5px',
-    border: '1px solid #ddd',
-    borderRadius: '5px',
-  } as CSSProperties,
-  addButton: {
-    marginLeft: '10px',
-    padding: '5px 10px',
-    border: 'none',
-    borderRadius: '5px',
-    backgroundColor: '#003366',
-    color: '#F9ECCB',
-    cursor: 'pointer',
-  } as CSSProperties,
-  addButtonDisabled: {
-    backgroundColor: '#A9A9A9',
-    cursor: 'not-allowed',
-  } as CSSProperties,
-  removeButton: {
-    marginLeft: '10px',
-    padding: '5px 10px',
-    border: 'none',
-    borderRadius: '5px',
-    backgroundColor: '#CC3333',
-    color: 'white',
-    cursor: 'pointer',
-  } as CSSProperties,
-  dueDate: {
-    marginLeft: '10px',
-    textAlign: 'right',
-    flex: '1',
-  } as CSSProperties,
-  modeSelection: {
-    textAlign: "center",
-    width: "100%",
-    maxWidth: "500px",
-  },
-  title: {
-    fontSize: "18px",
-    fontWeight: "bold",
-  },
-  modes: {
-    display: "flex",
-    justifyContent: "space-around",
-    marginTop: "10px",
-  },
-  mode: {
-    padding: "10px",
-    borderRadius: "8px",
-    backgroundColor: "#ccc",
-    cursor: "pointer",
-    flex: "1",
-    margin: "0 5px",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-  },
-  selectedMode: {
-    border: "2px solid #333",
-  },
-  icon: {
-    fontSize: "24px",
-  },
-  label: {
-    marginTop: "5px",
-    fontSize: "14px",
-  },
-  confirmation: {
-    marginTop: "20px",
-    textAlign: "center",
-  },
-  confirmationText: {
-    fontSize: "18px",
-    fontWeight: "bold",
-  },
-  confirmationButtons: {
-    marginTop: "10px",
-  },
-  button: {
-    margin: "0 5px",
-    padding: "10px 20px",
-    fontSize: "16px",
-    borderRadius: "8px",
-    cursor: "pointer",
-    border: "none",
-    backgroundColor: "#333",
-    color: "#fff",
-  },
-};
-
-export default App;
+}

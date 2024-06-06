@@ -1,3 +1,4 @@
+import { WidthFull } from "@mui/icons-material";
 import React, { useState, useEffect, useRef } from "react";
 
 interface ScheduleEvent {
@@ -59,7 +60,7 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
   useEffect(() => {
     const events = parseSchedule(formatSchedule(output));
     setScheduleEvents(events);
-  }, []);
+  }, [output]);
 
   useEffect(() => {
     if (currentEventRef.current) {
@@ -77,6 +78,7 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     } else {
       newCheckedEvents.add(index);
     }
+
     setCheckedEvents(newCheckedEvents);
   };
 
@@ -120,14 +122,14 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     const currentEvent = sortedEvents.splice(currentEventIndex, 1)[0];
     sortedEvents.unshift(currentEvent);
   }
-  console.log("schedule");
-  console.log(scheduleEvents);
+  // console.log("schedule");
+  // console.log(scheduleEvents);
   //console.log(formattedText);
 
   return (
     <div className="schedule-container">
       <h1>Today's Schedule</h1>
-
+      
       <div className="schedule-content">
         <ul className="schedule-list">
           {sortedEvents.map((event, index) => {
