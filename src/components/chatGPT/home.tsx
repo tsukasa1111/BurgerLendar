@@ -130,7 +130,7 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     <div className="schedule-container">
       <h1>Today's Schedule</h1>
       
-      <div className="schedule-content" style={WidthFull}>
+      <div className="schedule-content">
         <ul className="schedule-list">
           {sortedEvents.map((event, index) => {
             const isCurrent = currentEventIndex !== -1 && index === 0;
