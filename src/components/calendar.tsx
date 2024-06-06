@@ -4,6 +4,7 @@ import { PlusIcon, PencilIcon, TrashIcon } from '@heroicons/react/20/solid';
 import { db, auth } from '../firebase/firebase';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+
 interface Event {
   id: string;
   title: string;
@@ -30,17 +31,17 @@ const Calendar = () => {
     description: '',
   });
   const [user, setUser] = useState<any>(null);
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
   const [swipedEvent, setSwipedEvent] = useState<string | null>(null);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
   useEffect(() => {
-    // ウィンドウの高さを取得し、viewportHeight状態を更新する関数
     const handleResize = () => {
       setViewportHeight(window.innerHeight);
     };
 
     window.addEventListener('resize', handleResize);
-    handleResize(); // 初期設定
+    handleResize();
 
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
@@ -51,11 +52,14 @@ const Calendar = () => {
       }
     });
 
+    document.addEventListener('click', handleClickOutside);
+
     return () => {
       window.removeEventListener('resize', handleResize);
       unsubscribe();
+      document.removeEventListener('click', handleClickOutside);
     };
-  }, []);
+  }, [editingEventId]);
 
   const fetchEvents = async (userId: string) => {
     try {
@@ -158,6 +162,11 @@ const Calendar = () => {
     }
   };
 
+  const handleEventDoubleClick = (event: React.MouseEvent, eventId: string) => {
+    event.stopPropagation();  // イベントの伝播を止める
+    setEditingEventId(editingEventId === eventId ? null : eventId);
+  };
+
   const handleSwipe = (event: React.TouchEvent, eventId: string) => {
     const touch = event.changedTouches[0];
     if (touch.clientX < window.innerWidth / 2) {
@@ -167,8 +176,15 @@ const Calendar = () => {
     }
   };
 
+  const handleClickOutside = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.closest('.event-item') && editingEventId) {
+      setEditingEventId(null);
+    }
+  };
+
   return (
-    <div className="container" style={{ height: `${viewportHeight - 120}px` }}>
+    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px`, backgroundColor: '#F9ECCB' }}>
       <div className="header w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
           <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
@@ -200,15 +216,20 @@ const Calendar = () => {
             );
           })}
         </div>
-        <div className="p-4 border-t overflow-y-auto bg-white" style={{ maxHeight: 'calc(49vh)' }}>
+        <div className="p-4 border-t overflow-y-auto bg-white" style={{ height: `${viewportHeight-440}px` }}>
           <p>{selectedDate ? `${currentMonth + 1}月${selectedDate}日` : ''}</p>
           {events.filter(event => new Date(event.date).getDate() === selectedDate && new Date(event.date).getMonth() === currentMonth && new Date(event.date).getFullYear() === currentYear)
-            .sort((a, b) => a.startTime.localeCompare(b.startTime)) // 開始時刻順に並べる
+            .sort((a, b) => {
+              const aStartTime = a.startTime || '';
+              const bStartTime = b.startTime || '';
+              return aStartTime.localeCompare(bStartTime);
+            })
             .map((event, index) => (
               <div
                 key={index}
                 id={event.id}
-                className={`relative flex items-center p-2 bg-gray-100 rounded mb-2 cursor-pointer transition-transform ${swipedEvent === event.id ? 'translate-x-[-100px]' : 'translate-x-0'}`}
+                className={`relative flex items-center p-2 bg-gray-100 rounded mb-2 cursor-pointer transition-transform event-item`}
+                onDoubleClick={(e) => handleEventDoubleClick(e, event.id)}
                 onTouchEnd={(e) => handleSwipe(e, event.id)}
               >
                 <div className="flex-grow">
@@ -216,20 +237,22 @@ const Calendar = () => {
                   <p>{event.title}</p>
                   <p>{event.description}</p>
                 </div>
-                <div className={`absolute inset-y-0 right-0 flex items-center pr-3 space-x-2 transition-opacity ${swipedEvent === event.id ? 'opacity-100' : 'opacity-0'}`}>
-                  <button
-                    className="text-blue-500 hover:text-blue-700"
-                    onClick={() => handleEventEdit(event)}
-                  >
-                    <PencilIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                  <button
-                    className="text-red-500 hover:text-red-700"
-                    onClick={() => handleEventDelete(event.id)}
-                  >
-                    <TrashIcon className="h-5 w-5" aria-hidden="true" />
-                  </button>
-                </div>
+                {editingEventId === event.id && (
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 space-x-2">
+                    <button
+                      className="text-blue-500 hover:text-blue-700"
+                      onClick={() => handleEventEdit(event)}
+                    >
+                      <PencilIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                    <button
+                      className="text-red-500 hover:text-red-700"
+                      onClick={() => handleEventDelete(event.id)}
+                    >
+                      <TrashIcon className="h-5 w-5" aria-hidden="true" />
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
           {selectedDate && (
@@ -292,22 +315,28 @@ const Calendar = () => {
                             onChange={handleEventChange}
                             placeholder="Title"
                           />
-                          <input
-                            type="time"
-                            name="startTime"
-                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
-                            value={newEvent.startTime}
-                            onChange={handleEventChange}
-                            placeholder="Start Time"
-                          />
-                          <input
-                            type="time"
-                            name="endTime"
-                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
-                            value={newEvent.endTime}
-                            onChange={handleEventChange}
-                            placeholder="End Time"
-                          />
+                          <div className="mt-4 flex flex-col items-center">
+                            <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">開始時刻</label>
+                            <input
+                              type="time"
+                              name="startTime"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-1"
+                              value={newEvent.startTime}
+                              onChange={handleEventChange}
+                              placeholder="Start Time"
+                            />
+                          </div>
+                          <div className="mt-4 flex flex-col items-center">
+                            <label htmlFor="endTime" className="block text-sm font-medium text-gray-700">終了時刻</label>
+                            <input
+                              type="time"
+                              name="endTime"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-1"
+                              value={newEvent.endTime}
+                              onChange={handleEventChange}
+                              placeholder="End Time"
+                            />
+                          </div>
                           <textarea
                             name="description"
                             className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
