@@ -32,7 +32,6 @@ const Calendar = () => {
   });
   const [user, setUser] = useState<any>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
-  const [swipedEvent, setSwipedEvent] = useState<string | null>(null);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
 
   useEffect(() => {
@@ -59,7 +58,7 @@ const Calendar = () => {
       unsubscribe();
       document.removeEventListener('click', handleClickOutside);
     };
-  }, [editingEventId]);
+  }, []);
 
   const fetchEvents = async (userId: string) => {
     try {
@@ -162,18 +161,8 @@ const Calendar = () => {
     }
   };
 
-  const handleEventDoubleClick = (event: React.MouseEvent, eventId: string) => {
-    event.stopPropagation();  // イベントの伝播を止める
+  const handleEventDoubleClick = (eventId: string) => {
     setEditingEventId(editingEventId === eventId ? null : eventId);
-  };
-
-  const handleSwipe = (event: React.TouchEvent, eventId: string) => {
-    const touch = event.changedTouches[0];
-    if (touch.clientX < window.innerWidth / 2) {
-      setSwipedEvent(eventId);
-    } else {
-      setSwipedEvent(null);
-    }
   };
 
   const handleClickOutside = (e: MouseEvent) => {
@@ -184,7 +173,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px`, backgroundColor: '#F9ECCB' }}>
+    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight-120}px`, backgroundColor: '#F9ECCB' }}>
       <div className="header w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
           <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
@@ -216,7 +205,7 @@ const Calendar = () => {
             );
           })}
         </div>
-        <div className="p-4 border-t overflow-y-auto bg-white" style={{ height: `${viewportHeight-440}px` }}>
+        <div className="p-4 border-t overflow-y-auto bg-white" style={{ height: `${viewportHeight*60/100}px ` }}>
           <p>{selectedDate ? `${currentMonth + 1}月${selectedDate}日` : ''}</p>
           {events.filter(event => new Date(event.date).getDate() === selectedDate && new Date(event.date).getMonth() === currentMonth && new Date(event.date).getFullYear() === currentYear)
             .sort((a, b) => {
@@ -229,8 +218,7 @@ const Calendar = () => {
                 key={index}
                 id={event.id}
                 className={`relative flex items-center p-2 bg-gray-100 rounded mb-2 cursor-pointer transition-transform event-item`}
-                onDoubleClick={(e) => handleEventDoubleClick(e, event.id)}
-                onTouchEnd={(e) => handleSwipe(e, event.id)}
+                onDoubleClick={() => handleEventDoubleClick(event.id)}
               >
                 <div className="flex-grow">
                   <p>{`${event.startTime} - ${event.endTime}`}</p>
