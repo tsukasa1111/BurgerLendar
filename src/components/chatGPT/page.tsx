@@ -6,10 +6,10 @@ import Home from "./home";
 const App: React.FC = () => {
   const [output, setOutput] = useState<string>("");
   
-  useEffect(() => {
-    console.log("in page.tsx output:");
-    console.log(output);
-  }, [output]);
+  // useEffect(() => {
+  //   console.log("in page.tsx output:");
+  //   console.log(output);
+  // }, [output]);
 
   return (
     <div>

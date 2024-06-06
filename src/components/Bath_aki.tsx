@@ -3,6 +3,7 @@ import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // useNavigateをインポート
+import Akinator from "./akinator.png"; 
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 
 const BathAki: React.FC = () => {
@@ -69,10 +70,12 @@ const BathAki: React.FC = () => {
         ) : (
           <>
             <div style={styles.questionContainer}>
+            <img src={Akinator} alt="Akinator"  /> 
               <h2 style={styles.question}>質問1/5:</h2>
               <p style={styles.subQuestion}>お風呂いつ入りますか？（複数選択可）</p>
             </div>
             <div style={styles.optionsContainer}>
+              
               {['朝', '昼', '夜'].map(option => (
                 <button
                   key={option}

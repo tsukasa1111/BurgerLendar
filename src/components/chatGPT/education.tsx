@@ -1,11 +1,18 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import {
+  collection,
+  doc,
+  setDoc,
+  serverTimestamp,
+  getDocs,
+  getDoc,
+  query,
+  where,
+} from "firebase/firestore";
+import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
+import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
 
-interface ScheduleItem {
-  startTime: string;
-  endTime: string;
-  description: string;
-}
 interface EduProps {
   setOutput: (output: string) => void;
 }
@@ -13,61 +20,107 @@ interface ScheduledTask {
   Title: string;
   deadline: string;
 }
+interface Event {
+  id: string;
+  name: string;
+  date: string;
+}
+interface aki {
+  bath: string[];
+  food: string[];
+  laun: number;
+  laundry: number;
+  sleep: number;
+  smoke: number;
+}
 
 const Edu: React.FC<EduProps> = ({ setOutput }) => {
-  const [scheduleItems, setScheduleItems] = useState<ScheduleItem[]>([
-    { startTime: "", endTime: "", description: "" },
-  ]);
-
+  const [events, setEvents] = useState<Event[]>([]);
   const [scheduleTasks, setScheduleTasks] = useState<ScheduledTask[]>([]);
 
-  const [tasks, setTasks] = useState<string[]>([""]);
+  const [Aki, setAki] = useState<aki>({
+    bath: [],
+    food: [],
+    laun: 0,
+    laundry: 0,
+    sleep: 0,
+    smoke: 0,
+  });
   const [motivation, setMotivation] = useState<"low" | "medium" | "high">(
     "low"
   );
   const [out, setout] = useState<string>("");
+  const [user, setUser] = useState<any>(null);
 
-  const handleScheduleChange = (
-    index: number,
-    field: keyof ScheduleItem,
-    value: string
-  ) => {
-    const newItems = scheduleItems.map((item, idx) =>
-      idx === index ? { ...item, [field]: value } : item
-    );
-    setScheduleItems(newItems);
-  };
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+    });
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
-  const addScheduleItem = () => {
-    setScheduleItems([
-      ...scheduleItems,
-      { startTime: "", endTime: "", description: "" },
-    ]);
-  };
+  useEffect(() => {
+    const fetchUserAki = async () => {
+      try {
+        const docRef = doc(db, "Users_Aki", user.uid); // 'Users_Aki' is the collection name and `userId` is the document ID
+        const docSnap = await getDoc(docRef);
 
-  const handleScheduledTaskChange = (
-    index: number,
-    field: keyof ScheduledTask,
-    value: string
-  ) => {
-    const newTasks = scheduleTasks.map((task, idx) =>
-      idx === index ? { ...task, [field]: value } : task
-    );
-    setScheduleTasks(newTasks);
-  };
+        if (docSnap.exists()) {
+          const data = docSnap.data() as aki;
+          setAki({
+            ...data,
+          });
+          console.log("aki:", Aki);
+        } else {
+          Error("No such document!");
+          alert("No such document!");
+        }
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+    const fetchEvents = async () => {
+      try {
+        
+        const eventsRef = collection(db, "users", user.uid, "events");
+        const q = query(eventsRef);
+        const querySnapshot = await getDocs(q);
+        const fetchedEvents = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().title,
+          date: doc.data().date,
+        }));
 
-  const addScheduledTask = () => {
-    setScheduleTasks([...scheduleTasks, { Title: "", deadline: "" }]);
-  };
+        setEvents(fetchedEvents);
+        console.log("events:", events);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
+    const fetchtodos = async () => {
+      try {
+        
+        const eventsRef = collection(db, "users", user.uid, "todos");
+        const q = query(eventsRef);
+        const querySnapshot = await getDocs(q);
+        const fetchedTodos = querySnapshot.docs.map((doc) => ({
+          Title: doc.data().text,
+          deadline: doc.data().dueDate,
+        }));
 
-  const handleTaskChange = (index: number, value: string) => {
-    const newTasks = tasks.map((task, idx) => (idx === index ? value : task));
-    setTasks(newTasks);
-  };
+        setScheduleTasks(fetchedTodos);
+        console.log("todos:", scheduleTasks);
+      } catch (err) {
+        console.error("Error fetching user data:", err);
+      }
+    };
 
-  const addTask = () => {
-    setTasks([...tasks, ""]);
-  };
+    fetchUserAki();
+    fetchEvents();
+    fetchtodos();
+  }, [user]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -80,17 +133,14 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
     organize a schedule in the specified format.
 
     Schedule Items(To be done at a specific time during the day):
-    ${scheduleItems
-      .map(
-        (item) =>
-          `Start: ${item.startTime}, End: ${item.endTime}, Description: ${item.description}`
-      )
+    ${events
+      .map((item) => `ItemName: ${item.name}, DeadlineDay: ${item.date}`)
       .join("\n")}
 
     Tasks (To be done at any time during the day):
-    - ${tasks.join("\n- ")}
+    - ${scheduleTasks.join("\n- ")}
 
-    Scheduled Tasks (with Deadline but ):
+    Scheduled Tasks (with Deadline but you don't have to do it during the day, just need to finish it by the deadline):
     ${scheduleTasks
       .map((task) => `Title: ${task.Title}, Deadline: ${task.deadline}`)
       .join("\n")}
@@ -108,7 +158,6 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
         `;
 
     try {
-      
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -131,88 +180,11 @@ const Edu: React.FC<EduProps> = ({ setOutput }) => {
 
   return (
     <div>
-      <h1>Schedule Planner</h1>
-      <form onSubmit={handleSubmit}>
-        {scheduleItems.map((item, index) => (
-          <div key={index}>
-            <input
-              type="time"
-              value={item.startTime}
-              onChange={(e) =>
-                handleScheduleChange(index, "startTime", e.target.value)
-              }
-            />
-            <input
-              type="time"
-              value={item.endTime}
-              onChange={(e) =>
-                handleScheduleChange(index, "endTime", e.target.value)
-              }
-            />
-            <input
-              type="text"
-              value={item.description}
-              onChange={(e) =>
-                handleScheduleChange(index, "description", e.target.value)
-              }
-            />
-          </div>
-        ))}
-        <button type="button" onClick={addScheduleItem}>
-          Add Schedule Item
-        </button>
-
-        {tasks.map((task, index) => (
-          <div key={index}>
-            <input
-              type="text"
-              value={task}
-              onChange={(e) => handleTaskChange(index, e.target.value)}
-            />
-          </div>
-        ))}
-        <button type="button" onClick={addTask}>
-          Add Task
-        </button>
-
-        {scheduleTasks.map((task, index) => (
-          <div key={index}>
-            <input
-              type="text"
-              value={task.Title}
-              onChange={(e) =>
-                handleScheduledTaskChange(index, "Title", e.target.value)
-              }
-            />
-            <input
-              type="date"
-              value={task.deadline}
-              onChange={(e) =>
-                handleScheduledTaskChange(index, "deadline", e.target.value)
-              }
-            />
-          </div>
-        ))}
-        <button type="button" onClick={addScheduledTask}>
-          Add Scheduled Task
-        </button>
-
-        <div>
-          <label>Motivation Level:</label>
-          <select
-            value={motivation}
-            onChange={(e) =>
-              setMotivation(e.target.value as "low" | "medium" | "high")
-            }
-          >
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
-        </div>
-        <button type="submit">Generate Schedule</button>
-      </form>
       <div>
+      <form onSubmit={handleSubmit}>
+        <button type="submit">Good Morning</button>
+      </form>
+
         <h1>{out}</h1>
       </div>
     </div>

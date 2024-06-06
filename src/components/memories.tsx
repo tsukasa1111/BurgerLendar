@@ -120,10 +120,7 @@ export default function Memories() {
               nowIndicator={true}
               editable={true}
               selectable={true}
-              //
               selectMirror={true}
-              //月表示でどのようにするかはここで設定する？
-              dateClick={handleDateClick}
             />
           </div>
         </div>
