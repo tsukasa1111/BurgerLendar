@@ -5,6 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import Akinator from "./akinator.png"; 
+import useViewportHeight from "../hooks/useViewportHeight"; // Import the custom hook
 
 const LaunAki: React.FC = () => {
   const [launPerWeek, setlaunPerWeek] = useState<number | "">("");
@@ -12,6 +13,7 @@ const LaunAki: React.FC = () => {
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
   const [hovered, setHovered] = useState<boolean>(false);
   const navigate = useNavigate();
+  const viewportHeight = useViewportHeight(); // Use the custom hook
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -69,7 +71,7 @@ const LaunAki: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, height: viewportHeight-60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
