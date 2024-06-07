@@ -1,10 +1,8 @@
-
 import React from "react";
 import "./App.css";
 import Authun from "./components/Authun";
 import Login from "./components/Login";
 import AddTabacco from "./components/AddTabacco";
-import Home from "./components/Bur_Home";
 import TaskManager from "./components/TaskManager";
 import {
   BrowserRouter as Router,
@@ -28,7 +26,6 @@ import Profile from "./components/Profile";
 import ModeSelector from "./components/ModeSelector";
 import WebglApp from "./components/webGL/page";
 
-
 function App() {
   return (
     <Router>
@@ -37,14 +34,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Login />} />
           <Route path="/modeselector" element={<ModeSelector />} />
-          <Route
-            path="/profile"
-            element={
-              <Profile/>
-            }
-          />
-           {/* <Route path="/home" element={<Home />} />  */}
-
+          <Route path="/profile" element={<Profile />} />
           <Route path="/signup" element={<Authun />} />
           <Route path="/admin" element={<AddTabacco />} />
           <Route path="/task" element={<TaskManager />} />
@@ -56,11 +46,8 @@ function App() {
           <Route path="/calendar" element={<EventCalendar />} />
           <Route path="/todo" element={<ToDo />} />
           <Route path="/memories" element={<Memories />} />
-          <Route path="/memories" element={<Memories />} />
-          {/* <Route path="/loading" Component={Loading} /> */}
-          
-          
-          <Route path="/webgl" Component={WebglApp} />
+          <Route path="/loading" element={<Loading mode="relax" />} />
+          <Route path="/webgl" element={<WebglApp />} />
         </Routes>
       </div>
       <ConditionalFooter />
@@ -77,7 +64,7 @@ function ConditionalFooter() {
     "/memories",
     "/profile",
     "/modeselector",
-  ]; // フッターを表示するパスを指定
+  ]; // Paths where the footer should be displayed
 
   if (!footerPaths.includes(location.pathname)) {
     return null;
