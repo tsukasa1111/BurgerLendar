@@ -184,7 +184,7 @@ const Calendar = () => {
   };
 
   return (
-    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px`, backgroundColor: '#F9ECCB',width: '100%'}}>
+    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px` }}>
       <div className="header w-full shadow-md rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
           <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
@@ -228,7 +228,7 @@ const Calendar = () => {
               <div
                 key={index}
                 id={event.id}
-                className={`relative flex items-center p-2 #F9ECC rounded mb-2 cursor-pointer transition-transform event-item`}
+                className={`relative flex items-center p-2 bg-gray-100 rounded mb-2 cursor-pointer transition-transform event-item`}
                 onDoubleClick={(e) => handleEventDoubleClick(e, event.id)}
                 onTouchEnd={(e) => handleSwipe(e, event.id)}
               >
@@ -257,115 +257,120 @@ const Calendar = () => {
             ))}
           {selectedDate && (
             <button
-              className="mt-2 inline-flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-500 fixed bottom-24 right-8"
-              onClick={() => {
-                setEventToEdit(null);
-                setNewEvent({
-                  id: '',
-                  title: '',
-                  date: '',
-                  startTime: '',
-                  endTime: '',
-                  description: '',
-                });
-                setShowModal(true);
-              }}
-            >
-              <PlusIcon className="h-8 w-8" aria-hidden="true" />
-            </button>
+            className="mt-2 inline-flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-500 fixed bottom-24"
+            style={{ right: '20%' }}  // ここでボタンを少し左に配置しています。
+            onClick={() => {
+              setEventToEdit(null);
+              setNewEvent({
+                id: '',
+                title: '',
+                date: '',
+                startTime: '',
+                endTime: '',
+                description: '',
+              });
+              setShowModal(true);
+            }}
+          >
+            <PlusIcon className="h-8 w-8" aria-hidden="true" />
+          </button>
           )}
         </div>
 
-        <Transition show={showModal} as={Fragment}>
-  <Dialog as="div" className="fixed inset-0 z-10 overflow-y-auto" onClose={() => setShowModal(false)}>
-    <div className="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-      <Transition.Child
-        as={Fragment}
-        enter="ease-out duration-300"
-        enterFrom="opacity-0"
-        enterTo="opacity-100"
-        leave="ease-in duration-200"
-        leaveFrom="opacity-100"
-        leaveTo="opacity-0"
-      >
-        <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" aria-hidden="true" />
-      </Transition.Child>
-
-      <span className="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-      <Transition.Child
-        as={Fragment}
-        enter="ease-out duration-300"
-        enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-        enterTo="opacity-100 translate-y-0 sm:scale-100"
-        leave="ease-in duration-200"
-        leaveFrom="opacity-100 translate-y-0 sm:scale-100"
-        leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
-      >
-        <div className="inline-block align-bottom bg-white rounded-lg px-4 pt-5 pb-4 text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full sm:p-6">
-          <div>
-            <div className="mt-3 text-center sm:mt-5">
-              <Dialog.Title as="h3" className="text-lg leading-6 font-medium text-gray-900">
-                イベントを追加
-              </Dialog.Title>
-              <div className="mt-2">
-                <input
-                  type="text"
-                  name="title"
-                  value={newEvent.title}
-                  onChange={handleEventChange}
-                  placeholder="タイトル"
-                  className="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                />
-                <input
-                  type="date"
-                  name="date"
-                  value={newEvent.date}
-                  onChange={handleEventChange}
-                  placeholder="日付"
-                  className="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                />
-                <input
-                  type="time"
-                  name="startTime"
-                  value={newEvent.startTime}
-                  onChange={handleEventChange}
-                  placeholder="開始時間"
-                  className="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                />
-                <input
-                  type="time"
-                  name="endTime"
-                  value={newEvent.endTime}
-                  onChange={handleEventChange}
-                  placeholder="終了時間"
-                  className="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                />
-                <textarea
-                  name="description"
-                  value={newEvent.description}
-                  onChange={handleEventChange}
-                  placeholder="説明"
-                  className="w-full px-3 py-2 mb-2 border rounded-md focus:outline-none focus:ring focus:border-blue-300"
-                />
+        <Transition.Root show={showModal} as={Fragment}>
+          <Dialog as="div" className="relative z-10" onClose={() => setShowModal(false)}>
+            <Transition.Child
+              as={Fragment}
+              enter="ease-out duration-300"
+              enterFrom="opacity-0"
+              enterTo="opacity-100"
+              leave="ease-in duration-200"
+              leaveFrom="opacity-100"
+              leaveTo="opacity-0"
+            >
+              <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+            </Transition.Child>
+            <div className="fixed inset-0 z-10 overflow-y-auto">
+              <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
+                <Transition.Child
+                  as={Fragment}
+                  enter="ease-out duration-300"
+                  enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                  enterTo="opacity-100 translate-y-0 sm:scale-100"
+                  leave="ease-in duration-200"
+                  leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                  leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                >
+                  <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:max-w-lg sm:p-6 w-full">
+                    <div>
+                      <div className="mt-3 text-center sm:mt-5">
+                        <Dialog.Title as="h3" className="text-lg font-semibold leading-6 text-gray-900">
+                          {eventToEdit ? 'Edit Event' : 'Add Event'}
+                        </Dialog.Title>
+                        <div className="mt-2">
+                          <input
+                            type="text"
+                            name="title"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600"
+                            value={newEvent.title}
+                            onChange={handleEventChange}
+                            placeholder="Title"
+                          />
+                          <div className="mt-4 flex flex-col items-center">
+                            <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">開始時刻</label>
+                            <input
+                              type="time"
+                              name="startTime"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-1"
+                              value={newEvent.startTime}
+                              onChange={handleEventChange}
+                              placeholder="Start Time"
+                            />
+                          </div>
+                          <div className="mt-4 flex flex-col items-center">
+                            <label htmlFor="endTime" className="block text-sm font-medium text-gray-700">終了時刻</label>
+                            <input
+                              type="time"
+                              name="endTime"
+                              className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-1"
+                              value={newEvent.endTime}
+                              onChange={handleEventChange}
+                              placeholder="End Time"
+                            />
+                          </div>
+                          <textarea
+                            name="description"
+                            className="block w-full rounded-md border-0 py-2 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-blue-600 mt-4"
+                            value={newEvent.description}
+                            onChange={handleEventChange}
+                            placeholder="Description"
+                          />
+                        </div>
+                        <div className="mt-5 sm:mt-6 grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            className="inline-flex w-full justify-center rounded-md bg-blue-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-blue-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                            onClick={handleEventSubmit}
+                            disabled={!newEvent.title || !newEvent.startTime || !newEvent.endTime}
+                          >
+                            {eventToEdit ? 'Update' : 'Create'}
+                          </button>
+                          <button
+                            type="button"
+                            className="inline-flex w-full justify-center rounded-md bg-white px-4 py-2 text-base font-semibold text-blue-600 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+                            onClick={() => setShowModal(false)}
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </Dialog.Panel>
+                </Transition.Child>
               </div>
             </div>
-          </div>
-          <div className="mt-5 sm:mt-6">
-            <button
-              type="button"
-              className="inline-flex justify-center w-full rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-500 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:text-sm"
-              onClick={handleEventSubmit}
-            >
-              保存
-            </button>
-          </div>
-        </div>
-      </Transition.Child>
-    </div>
-  </Dialog>
-</Transition>
-
+          </Dialog>
+        </Transition.Root>
       </div>
     </div>
   );
