@@ -14,6 +14,7 @@ import {
 import { onAuthStateChanged } from "firebase/auth";
 import { CSSProperties } from "react";
 import GPT from "./Bur_Home";
+import useViewportHeight from "../hooks/useViewportHeight"; // Import the custom hook
 
 interface Item {
   id: string;
@@ -38,7 +39,6 @@ interface WeatherData {
 }
 
 const App: React.FC = () => {
-  const [tasks, setTasks] = useState<Item[]>([]);
   const [todos, setTodos] = useState<Item[]>([]);
   const [newTask, setNewTask] = useState<string>("");
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
@@ -48,6 +48,7 @@ const App: React.FC = () => {
   const [confirmMode, setConfirmMode] = useState<boolean>(false);
   const [location, setLocation] = useState<Location | null>(null);
   const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const viewportHeight = useViewportHeight(); // Get the current viewport height
 
   const modes = [
     { id: "relax", label: "ゆるゆる日", icon: "😊", color: "#E48B63" },
@@ -59,7 +60,6 @@ const App: React.FC = () => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-        fetchTasks(currentUser.uid);
         fetchTodos(currentUser.uid);
       } else {
         setUser(null);
@@ -68,21 +68,6 @@ const App: React.FC = () => {
 
     return () => unsubscribe();
   }, []);
-
-  const fetchTasks = async (userId: string) => {
-    try {
-      const q = query(collection(db, "users", userId, "tasks"));
-      const querySnapshot = await getDocs(q);
-      const tasksData = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        text: doc.data().text,
-        dueDate: doc.data().dueDate,
-      })) as Item[];
-      setTasks(tasksData);
-    } catch (error) {
-      console.error("Error fetching tasks: ", error);
-    }
-  };
 
   const fetchTodos = async (userId: string) => {
     try {
@@ -112,28 +97,14 @@ const App: React.FC = () => {
     const today = new Date();
     const dueDate = formatDate(today);
     try {
-      await addDoc(collection(db, "users", user.uid, "tasks"), {
+      await addDoc(collection(db, "users", user.uid, "todos"), {
         text: newTask,
         dueDate,
       });
       setNewTask("");
-      fetchTasks(user.uid);
+      fetchTodos(user.uid);
     } catch (error) {
-      console.error("Error adding task: ", error);
-    }
-  };
-
-  const handleDeleteTask = async (itemId: string) => {
-    if (!user) {
-      alert("User is not authenticated");
-      return;
-    }
-
-    try {
-      await deleteDoc(doc(db, "users", user.uid, "tasks", itemId));
-      fetchTasks(user.uid);
-    } catch (error) {
-      console.error("Error deleting task: ", error);
+      console.error("Error adding todo: ", error);
     }
   };
 
@@ -151,31 +122,31 @@ const App: React.FC = () => {
     }
   };
 
-  const handleUpdateTasks = async () => {
+  const handleUpdateTodos = async () => {
     if (!user) {
       alert("User is not authenticated");
       return;
     }
     try {
       const batch = writeBatch(db);
-      tasks.forEach((task) => {
-        const taskRef = doc(db, "users", user.uid, "tasks", task.id);
-        batch.update(taskRef, {
-          text: task.text,
-          dueDate: task.dueDate,
+      todos.forEach((todo) => {
+        const todoRef = doc(db, "users", user.uid, "todos", todo.id);
+        batch.update(todoRef, {
+          text: todo.text,
+          dueDate: todo.dueDate,
         });
       });
       await batch.commit();
       setIsEditMode(false);
-      fetchTasks(user.uid);
+      fetchTodos(user.uid);
     } catch (error) {
-      console.error("Error updating tasks: ", error);
+      console.error("Error updating todos: ", error);
     }
   };
 
   const toggleEditMode = () => {
     if (isEditMode) {
-      handleUpdateTasks();
+      handleUpdateTodos();
     } else {
       setIsEditMode(true);
     }
@@ -199,6 +170,7 @@ const App: React.FC = () => {
     }
     setConfirmMode(false);
   };
+
   useEffect(() => {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -227,7 +199,7 @@ const App: React.FC = () => {
   }, [location]);
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, height: `${viewportHeight - 120}px` }}>
       {done ? (
         // GPTコンポーネントを表示
         <GPT mode={selectedMode} />
@@ -286,22 +258,6 @@ const App: React.FC = () => {
               Add
             </button>
           </form>
-
-          <ul style={styles.list}>
-            {tasks.map((task) => (
-              <li key={task.id} style={styles.listItem}>
-                <span>
-                  {task.text} (Due: {task.dueDate})
-                </span>
-                <button
-                  onClick={() => handleDeleteTask(task.id)}
-                  style={styles.removeButton}
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
 
           <ul style={styles.list}>
             {todos.map((todo) => (
@@ -438,7 +394,6 @@ const styles: { [key: string]: CSSProperties } = {
     padding: "20px",
     width: "100%",
     maxWidth: "500px",
-    minHeight: "100vh",
     marginBottom: "20px",
   } as CSSProperties,
   header: {
