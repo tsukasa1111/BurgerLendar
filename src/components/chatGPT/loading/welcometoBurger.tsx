@@ -1,66 +1,49 @@
-import React from "react";
-import {
-  Quote,
-  MotivationQuotes,
-  NonMotivationQuotes,
-  DefoMotivationQuotes,
-} from "./data";
-import { useState, useEffect } from "react";
-import { auth, db } from "../../../firebase/firebase"; // Import the initialized Firestore instance
+// components/chatGPT/loading/welcometoBurger.tsx
+import React, { useState, useEffect } from "react";
+import { Quote, MotivationQuotes, NonMotivationQuotes, DefoMotivationQuotes } from "./data";
+import { auth } from "../../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
+import useViewportHeight from "../../../hooks/useViewportHeight"; // Import the custom hook
 
-const Loading = (mode: string) => {
+const Loading: React.FC<{ mode: string }> = ({ mode }) => {
   const [quote, setQuote] = useState<Quote | null>(null);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<string | null>(null);
+  const viewportHeight = useViewportHeight(); // Get the current viewport height
+
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      console.log(currentUser?.email);
-      setUser(currentUser?.displayName);
+      setUser(currentUser ? currentUser.displayName : null);
     });
-    if (mode === "relax") {
-      const randomQuote =
-        NonMotivationQuotes[
-          Math.floor(Math.random() * NonMotivationQuotes.length)
-        ];
-      setQuote(randomQuote);
-    }
-    if (mode === "normal") {
-      const randomQuote =
-        DefoMotivationQuotes[
-          Math.floor(Math.random() * DefoMotivationQuotes.length)
-        ];
-      setQuote(randomQuote);
-    }
-    if (mode === "hard") {
-      const randomQuote =
-        MotivationQuotes[Math.floor(Math.random() * MotivationQuotes.length)];
-      setQuote(randomQuote);
-    }
+
     return () => {
       unsubscribe();
     };
   }, []);
+
   useEffect(() => {
-    if (mode === "relax") {
-      const randomQuote =
-        NonMotivationQuotes[
+    let randomQuote: Quote;
+    switch (mode) {
+      case "relax":
+        randomQuote = NonMotivationQuotes[
           Math.floor(Math.random() * NonMotivationQuotes.length)
         ];
-      setQuote(randomQuote);
-    }
-    if (mode === "normal") {
-      const randomQuote =
-        DefoMotivationQuotes[
+        break;
+      case "normal":
+        randomQuote = DefoMotivationQuotes[
           Math.floor(Math.random() * DefoMotivationQuotes.length)
         ];
-      setQuote(randomQuote);
+        break;
+      case "hard":
+        randomQuote = MotivationQuotes[
+          Math.floor(Math.random() * MotivationQuotes.length)
+        ];
+        break;
+      default:
+        randomQuote = { text: "No quote available", author: "Unknown" };
     }
-    if (mode === "hard") {
-      const randomQuote =
-        MotivationQuotes[Math.floor(Math.random() * MotivationQuotes.length)];
-      setQuote(randomQuote);
-    }
-  }, [user]);
+    setQuote(randomQuote);
+  }, [mode]);
 
   return (
     <div style={styles.container}>
@@ -107,13 +90,14 @@ const styles = {
     flexDirection: "column" as "column",
     alignItems: "center",
     justifyContent: "center",
-    height: "100vh",
     backgroundColor: "#003366",
     color: "#F9ECCB",
     textAlign: "center" as "center",
+    height: "100px", // Ensure the container takes full viewport height
   },
   header: {
     marginBottom: "20px",
+    flex: "0 1 auto", // Ensure the header does not grow or shrink
   },
   title: {
     fontSize: "1.5em",
@@ -129,9 +113,12 @@ const styles = {
     display: "flex",
     flexDirection: "column" as "column",
     alignItems: "center",
+    justifyContent: "center",
     backgroundColor: "#003366",
     padding: "20px",
     borderRadius: "10px",
+    height: "100px", // Ensure main takes full remaining height
+    width: "100px", // Ensure main takes full width
   },
   burgerImage: {
     width: "150px",
@@ -148,7 +135,5 @@ const styles = {
     color: "#F9ECCB",
   },
 };
+
 export default Loading;
-/*
-ReactDOM.render(<App />, document.getElementById('root'));
-*/
