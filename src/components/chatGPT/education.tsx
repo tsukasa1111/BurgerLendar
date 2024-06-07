@@ -53,7 +53,6 @@ interface aki {
 const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [scheduleTasks, setScheduleTasks] = useState<ScheduledTask[]>([]);
-  
 
   const [Aki, setAki] = useState<aki>({
     bath: [],
@@ -73,10 +72,7 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
-
-      } 
-      
-
+      }
     });
 
     return () => {
@@ -119,19 +115,14 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
     try {
       const docRef = doc(db, "Users_Aki", user.uid);
       const docSnap = await getDoc(docRef);
-  
+
       if (docSnap.exists()) {
         const data = docSnap.data() as aki;
         setAki({
           ...data,
         });
-        const docNem = doc(db, "Users", user.uid);
-        const docSn = await getDoc(docRef);
-        const displayName = docSn.data()?.displayName || "Unknown User";
-        setUserName(displayName);
       } else {
         console.log("No such document!");
-        setUserName("Unknown User"); // ドキュメントが存在しない場合も安全な値を設定
       }
     } catch (err) {
       console.error("Error fetching user data:", err);
@@ -140,7 +131,7 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
   const fetchEvents = async () => {
     try {
       const eventsRef = collection(db, "users", user.uid, "events");
-      
+
       const q = query(eventsRef);
       const querySnapshot = await getDocs(q);
       const fetchedEvents = querySnapshot.docs.map((doc) => ({
@@ -171,8 +162,21 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       throw new Error("Error fetching user data:");
     }
   };
-
-  
+  const fetchUserName = async () => {
+    try {
+      const docRef = doc(db, "Users", user.uid);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setUserName(data?.displayName);
+        
+      } else {
+        console.log("No such document in Users!");
+      }
+    } catch (error) {
+      console.error("Error fetching user profile: ", error);
+    }
+  };
 
   useEffect(() => {
     async function fetchData() {
@@ -185,19 +189,20 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
           fetchUserAki(),
           fetchEvents(),
           fetchtodos(),
+          fetchUserName(),
         ]);
-        console.log('All data fetching complete');
+        console.log("All data fetching complete");
         handleSubmit();
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       }
     }
-  
+
     fetchData();
   }, [quote]);
 
   useEffect(() => {
-    if (events.length >= 1 || scheduleTasks.length >= 1 ) {
+    if (events.length >= 1 || scheduleTasks.length >= 1) {
       handleSubmit();
       console.log("you finished handleSubmit");
     }
@@ -251,6 +256,7 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
           },
         }
       );
+      console.log(response.data.choices[0].message.content)
       setOutput(response.data.choices[0].message.content);
       setout(response.data.choices[0].message.content);
     } catch (error) {
@@ -269,9 +275,7 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
           alt="burger"
           style={styles.burgerImage}
         />
-        <div style={styles.username}>
-          {userName }
-        </div>
+        <div style={styles.username}>{userName}</div>
         <div style={styles.quote}>
           {quote ? (
             <div

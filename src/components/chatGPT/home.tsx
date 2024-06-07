@@ -1,10 +1,30 @@
 import { WidthFull } from "@mui/icons-material";
-import React, { useState, useEffect, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  ChangeEvent,
+  FormEvent,
+} from "react";
+import { db, auth } from "../../firebase/firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  updateDoc,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  arrayUnion,
+} from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 
 interface ScheduleEvent {
   startTime: string;
   endTime: string;
   title: string;
+  done: boolean;
 }
 
 function parseSchedule(text: string): ScheduleEvent[] {
@@ -22,6 +42,7 @@ function parseSchedule(text: string): ScheduleEvent[] {
           startTime: currentStartTime,
           endTime: timeMatch[1],
           title: currentTitle,
+          done: false,
         });
       }
       currentStartTime = timeMatch[1];
@@ -35,6 +56,7 @@ function parseSchedule(text: string): ScheduleEvent[] {
       startTime: currentStartTime,
       endTime: "",
       title: currentTitle,
+      done: false,
     });
   }
 
@@ -50,6 +72,45 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
   const [checkedEvents, setCheckedEvents] = useState<Set<number>>(new Set());
   const [formattedText, setFormattedText] = useState<string>("");
   const currentEventRef = useRef<HTMLLIElement | null>(null);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+  function getCurrentDateFormatted() {
+    const today = new Date();
+    const year = today.getFullYear().toString().slice(2); // 年の下2桁を取得
+    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // 月を2桁で取得
+    const day = today.getDate().toString().padStart(2, "0"); // 日を2桁で取得
+    return year + month + day; // 結合して文字列を返す
+  }
+
+  const handleAddEvent = async () => {
+    const currentDate = getCurrentDateFormatted();
+
+    if (!user) {
+      alert("User is not authenticated");
+      return;
+    }
+    try {
+      await addDoc(collection(db, "schedule", user.uid, currentDate), {
+        arayField: arrayUnion(...scheduleEvents),
+      });
+
+      alert("Event has been added!");
+    } catch (error) {
+      console.error("Error adding event: ", error);
+      alert("Failed to add event");
+    }
+  };
 
   const formatSchedule = (text: string) => {
     const pattern = /(\d{2}:\d{2}) - ([^\.]+\.) /g;
@@ -60,6 +121,7 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
   useEffect(() => {
     const events = parseSchedule(formatSchedule(output));
     setScheduleEvents(events);
+    handleAddEvent();
   }, [output]);
 
   useEffect(() => {
@@ -129,7 +191,7 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
   return (
     <div className="schedule-container">
       <h1>Today's Schedule</h1>
-      
+
       <div className="schedule-content">
         <ul className="schedule-list">
           {sortedEvents.map((event, index) => {
