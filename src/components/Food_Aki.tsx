@@ -47,7 +47,7 @@ const FoodAki: React.FC = () => {
     try {
       const userAkiRef = doc(db, "Users_Aki", user.uid);
       await setDoc(userAkiRef, {
-        bath: selectedOptions,
+        food: selectedOptions,
         created_at: serverTimestamp()
       }, { merge: true });
       console.log("Selected options saved successfully.");

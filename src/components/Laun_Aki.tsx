@@ -51,7 +51,7 @@ const LaunAki: React.FC = () => {
         await setDoc(
           userSleepRef,
           {
-            laun: launPerWeek,
+            laundry: launPerWeek,
             created_at: serverTimestamp(),
           },
           { merge: true }
