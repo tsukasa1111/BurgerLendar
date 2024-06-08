@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
-import { getFirestore, collection, getDocs, doc, getDoc } from "firebase/firestore";
-import { getStorage, ref as storageRef, getDownloadURL, uploadString } from "firebase/storage";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  getDoc,
+} from "firebase/firestore";
+import {
+  getStorage,
+  ref as storageRef,
+  getDownloadURL,
+  uploadString,
+} from "firebase/storage";
 import Unity, { UnityContext } from "react-unity-webgl";
 import html2canvas from "html2canvas";
 import Poteto from "./poteto_icon.png";
@@ -26,7 +37,8 @@ const Memories: React.FC = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
-  const [unityInstanceUrl, setUnityInstanceUrl] = useState<UnityInstanceUrls | null>(null);
+  const [unityInstanceUrl, setUnityInstanceUrl] =
+    useState<UnityInstanceUrls | null>(null);
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,7 +61,12 @@ const Memories: React.FC = () => {
       if (currentUser) {
         setUser(currentUser);
         try {
-          const userEventsRef = collection(db, "Users_Burger", currentUser.uid, "BurgerData");
+          const userEventsRef = collection(
+            db,
+            "Users_Burger",
+            currentUser.uid,
+            "BurgerData"
+          );
           const snapshot = await getDocs(userEventsRef);
           const datesWithEvents = snapshot.docs.map((doc) => doc.id);
           setEvents(datesWithEvents);
@@ -79,7 +96,13 @@ const Memories: React.FC = () => {
     const currentUser = getAuth().currentUser;
 
     if (currentUser) {
-      const docRef = doc(db, "Users_Burger", currentUser.uid, "BurgerData", yymmdd);
+      const docRef = doc(
+        db,
+        "Users_Burger",
+        currentUser.uid,
+        "BurgerData",
+        yymmdd
+      );
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const configData = docSnap.data() as BurgerConfig;
@@ -88,7 +111,9 @@ const Memories: React.FC = () => {
         const storage = getStorage();
         const files = await Promise.all([
           getDownloadURL(storageRef(storage, `Burger_webgl/test15.data`)),
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.framework.js`)),
+          getDownloadURL(
+            storageRef(storage, `Burger_webgl/test15.framework.js`)
+          ),
           getDownloadURL(storageRef(storage, `Burger_webgl/test15.wasm`)),
           getDownloadURL(storageRef(storage, `Burger_webgl/test15.loader.js`)),
         ]);
@@ -148,26 +173,54 @@ const Memories: React.FC = () => {
     useEffect(() => {
       if (burgerConfig) {
         unityContext.on("loaded", () => {
-          unityContext.send("Scripts", "ConfigureBurger", JSON.stringify(burgerConfig));
+          unityContext.send(
+            "Scripts",
+            "ConfigureBurger",
+            JSON.stringify(burgerConfig)
+          );
         });
       }
     }, [unityContext, burgerConfig]);
 
-    return <Unity unityContext={unityContext} style={{ width: "95%", height: `${viewportHeight - 450}px` }} />;
+    return (
+      <Unity
+        unityContext={unityContext}
+        style={{ width: "95%", height: `${viewportHeight - 450}px` }}
+      />
+    );
   };
 
   const daysInMonth = getDaysInMonth(currentYear, currentMonth);
   const formattedToday = formatDate(today);
 
   return (
-    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px`, backgroundColor: "#F9ECCB" }}>
+    <div
+      className="w-full flex flex-col items-start justify-start"
+      style={{
+        height: `${viewportHeight - 120}px`,
+        backgroundColor: "#F9ECCB",
+      }}
+    >
       <div className="header w-full shadow-md rounded-lg overflow-hidden bg-white">
-        <div className="flex items-center justify-between p-4" style={{ backgroundColor: "#1a237e" }}>
-          <button className="text-gray-500" onClick={() => setCurrentMonth((prev) => (prev === 0 ? 11 : prev - 1))}>
+        <div
+          className="flex items-center justify-between p-4"
+          style={{ backgroundColor: "#1a237e" }}
+        >
+          <button
+            className="text-gray-500"
+            onClick={() =>
+              setCurrentMonth((prev) => (prev === 0 ? 11 : prev - 1))
+            }
+          >
             &lt;
           </button>
           <h2 className="text-lg font-bold text-white cursor-pointer">{`${currentYear}年${currentMonth + 1}月`}</h2>
-          <button className="text-gray-500" onClick={() => setCurrentMonth((prev) => (prev === 11 ? 0 : prev + 1))}>
+          <button
+            className="text-gray-500"
+            onClick={() =>
+              setCurrentMonth((prev) => (prev === 11 ? 0 : prev + 1))
+            }
+          >
             &gt;
           </button>
         </div>
@@ -179,14 +232,21 @@ const Memories: React.FC = () => {
           ))}
         </div>
         <div className="grid grid-cols-7 text-center bg-white">
-          {Array.from({ length: new Date(currentYear, currentMonth, 1).getDay() }).map((_, index) => (
+          {Array.from({
+            length: new Date(currentYear, currentMonth, 1).getDay(),
+          }).map((_, index) => (
             <div key={index} className="py-2"></div>
           ))}
           {Array.from({ length: daysInMonth }).map((_, dateIndex) => {
             const date = dateIndex + 1;
-            const yymmdd = formatDate(new Date(currentYear, currentMonth, date));
+            const yymmdd = formatDate(
+              new Date(currentYear, currentMonth, date)
+            );
             const hasEvent = events.includes(yymmdd);
-            const isToday = date === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
+            const isToday =
+              date === today.getDate() &&
+              currentMonth === today.getMonth() &&
+              currentYear === today.getFullYear();
             return (
               <div
                 key={dateIndex}
@@ -206,7 +266,10 @@ const Memories: React.FC = () => {
           <div ref={unityRef} style={{ width: "95%" }}>
             <UnityInstance files={unityInstanceUrl} />
           </div>
-          <button onClick={saveScreenshot} style={{ marginLeft: "10px", alignSelf: "center" }}>
+          <button
+            onClick={saveScreenshot}
+            style={{ marginLeft: "10px", alignSelf: "center" }}
+          >
             <img src={Poteto} alt="Save Screenshot" />
           </button>
         </div>

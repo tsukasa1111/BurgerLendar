@@ -1,21 +1,14 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
 import {
-  collection,
   doc,
   setDoc,
-  serverTimestamp,
-  getDocs,
-  getDoc,
-  query,
-  where,
+  getDoc
 } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
 import Unity, { UnityContext } from "react-unity-webgl";
-import { Web } from "@mui/icons-material";
-import { set } from "date-fns";
-import { count } from "console";
+
 interface ScheduledTask {
   title: string;
   startTime: string;
@@ -140,10 +133,34 @@ const ScheduleToBurger: React.FC = () => {
     }
     console.log("numberArray", numberArray);
     setburger(numberArray);
-    //
 
+    const saveArrayToDb = async () => {
+      if (!user || !user.uid) {
+        console.error('User not authenticated');
+        return;
+      }
+      const userDocRef = doc(db, 'Users_Burger', user.uid);  // Adjust the path according to your DB schema
+      const burgerDataRef = doc(userDocRef, 'BurgerData', today);  // Use today's date as identifier
+  
+      try {
+        await setDoc(burgerDataRef, {
+          cheeseCount: numberArray[1].toString(),
+          lettuceCount: numberArray[3].toString(),
+          meatCount: numberArray[0].toString(),
+          tomatoCount: numberArray[2].toString()
+        }, { merge: true });
+        console.log('Burger data saved successfully!');
+      } catch (error) {
+        console.error('Failed to save burger data:', error);
+      }
+    };
+  
+    if (numberArray.length > 0) {
+      saveArrayToDb();
+    }
+  
     return;
-  }, [out]);
+  }, [out, db, user, today]);
 
   const handleSubmit = async () => {
     setcountdata(countdata + 1);
@@ -244,23 +261,14 @@ const styles = {
     display: "flex",
     flexDirection: "column" as "column",
     alignItems: "center",
-    backgroundColor: "#003366",
     padding: "20px",
     borderRadius: "10px",
-  },
-  burgerImage: {
-    width: "150px",
-    height: "150px",
-  },
-  username: {
-    marginTop: "20px",
-    fontSize: "1.2em",
-    color: "#F9ECCB",
+    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
   },
   quote: {
-    marginTop: "10px",
-    fontSize: "1em",
-    color: "#F9ECCB",
+    fontSize: "1.2em",
+    fontStyle: "italic",
+    margin: "20px 0",
   },
 };
 
