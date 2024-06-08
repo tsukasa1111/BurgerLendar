@@ -55,7 +55,7 @@ const FoodAki: React.FC = () => {
       setTimeout(() => {
         setShowCheckmark(false);
         navigate('/sleep');
-      }, 500); // 0.5秒後に次のページに遷移
+      }, 500); 
     } catch (error) {
       console.error("Error saving selected options: ", error);
     }

@@ -100,6 +100,7 @@ const BathAki: React.FC = () => {
   );
 };
 
+
 const styles = {
   container: {
     display: 'flex',

@@ -177,3 +177,4 @@ const styles = {
 };
 
 export default Aki_Smoke;
+

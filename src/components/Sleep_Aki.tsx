@@ -7,6 +7,7 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import Akinator from "./akinator.png"; //
 import useViewportHeight from "../hooks/useViewportHeight"; // Import the custom hook
 
+
 const Aki_Sleep: React.FC = () => {
   const [sleepPerDay, setSleepPerDay] = useState<number | "">("");
   const [user, setUser] = useState<any>(null);
