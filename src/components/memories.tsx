@@ -14,10 +14,10 @@ interface UnityInstanceUrls {
 }
 
 interface BurgerConfig {
-  meatCount: number;
-  cheeseCount: number;
-  tomatoCount: number;
-  lettuceCount: number;
+  includeMeatCount: number;
+  includeCheeseCount: number;
+  includeTomatoCount: number;
+  includeLettuceCount: number;
 }
 
 const Memories: React.FC = () => {
@@ -78,6 +78,7 @@ const Memories: React.FC = () => {
   }, []);
 
   const handleDateClick = async (date: number) => {
+    setBurgerConfig(null); // 描画を消すために設定をリセット
     const yymmdd = formatDate(new Date(currentYear, currentMonth, date));
     setSelectedDate(yymmdd);
 
@@ -88,8 +89,14 @@ const Memories: React.FC = () => {
       const docRef = doc(db, "Users_Burger", currentUser.uid, "BurgerData", yymmdd);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
-        const configData = docSnap.data() as BurgerConfig;
-        setBurgerConfig(configData);
+        const data = docSnap.data();
+        const parsedData: BurgerConfig = {
+          includeMeatCount: parseInt(data.meatCount, 10),
+          includeCheeseCount: parseInt(data.cheeseCount, 10),
+          includeTomatoCount: parseInt(data.tomatoCount, 10),
+          includeLettuceCount: parseInt(data.lettuceCount, 10),
+        };
+        setBurgerConfig(parsedData);
       } else {
         setBurgerConfig(null);
       }
@@ -156,6 +163,12 @@ const Memories: React.FC = () => {
       }
     }, [unityContext, burgerConfig]);
 
+    useEffect(() => {
+      return () => {
+        unityContext.removeAllEventListeners();
+      };
+    }, [unityContext]);
+
     return <Unity unityContext={unityContext} style={{ width: "95%", height: `${viewportHeight - 450}px` }} />;
   };
 
@@ -205,14 +218,16 @@ const Memories: React.FC = () => {
           })}
         </div>
       </div>
-      {unityInstanceUrl && burgerConfig && (
+      {unityInstanceUrl && (
         <div className="flex">
           <div ref={unityRef} style={{ width: "95%" }}>
-            <UnityInstance files={unityInstanceUrl} />
+            {burgerConfig && <UnityInstance files={unityInstanceUrl} />}
           </div>
-          <button onClick={saveScreenshot} style={{ marginLeft: "10px", alignSelf: "center" }}>
-            <img src={Poteto} alt="Save Screenshot" />
-          </button>
+          {burgerConfig && (
+            <button onClick={saveScreenshot} style={{ marginLeft: "10px", alignSelf: "center" }}>
+              <img src={Poteto} alt="Save Screenshot" />
+            </button>
+          )}
         </div>
       )}
       <style>{`
