@@ -31,6 +31,7 @@ const Profile: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const viewportHeight = useViewportHeight();
   const [imageList, setImageList] = useState<string[]>([]); // State to hold list of image URLs
+  const [isImageModalOpen, setIsImageModalOpen] = useState(false); // State for image modal
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -190,6 +191,18 @@ const Profile: React.FC = () => {
     setEditingField(null);
   };
 
+  const handleProfilePictureClick = () => {
+    if (isEditing) {
+      handleEdit('profileImageUrl');
+    } else {
+      setIsImageModalOpen(true);
+    }
+  };
+
+  const closeModal = () => {
+    setIsImageModalOpen(false);
+  };
+
   return (
     <div className="profile-container" style={{ height: `${viewportHeight - 120}px` }}>
       <div className="profile-header">
@@ -199,7 +212,7 @@ const Profile: React.FC = () => {
         </button>
       </div>
       <div className="profile-picture-section">
-        <div className="profile-picture" onClick={() => handleEdit('profileImageUrl')}>
+        <div className="profile-picture" onClick={handleProfilePictureClick}>
           {profile.profileImageUrl ? (
             <img src={profile.profileImageUrl} alt="Profile" />
           ) : (
@@ -265,6 +278,15 @@ const Profile: React.FC = () => {
         {renderProfileRow('Sleep', profile.sleep, 'sleep', '時間/日')}
         {renderProfileRow('Smoke', profile.smoke, 'smoke', '本/日')}
       </div>
+
+      {isImageModalOpen && (
+        <div className="image-modal" onClick={closeModal}>
+          <div className="modal-content">
+            <img src={profile.profileImageUrl} alt="Profile Large" />
+          </div>
+        </div>
+      )}
+
       <style>{`
         .profile-container {
           width: 100vw;
@@ -418,6 +440,32 @@ const Profile: React.FC = () => {
           width: 50px;
           height: 50px;
           cursor: pointer;
+        }
+
+        .image-modal {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: rgba(0, 0, 0, 0.8);
+          display: flex;
+          justify-content: center;
+          align-items: center;
+          cursor: pointer;
+        }
+      
+        .modal-content {
+          position: relative;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
+      
+        .modal-content img {
+          max-width: 90%;
+          max-height: 90%;
+          border-radius: 10px;
         }
       `}</style>
     </div>
