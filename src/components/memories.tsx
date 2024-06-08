@@ -26,7 +26,12 @@ const Memories: React.FC = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
-  const [unityInstanceUrl, setUnityInstanceUrl] = useState<UnityInstanceUrls | null>(null);
+  const [unityInstanceUrl, setUnityInstanceUrl] = useState<UnityInstanceUrls | null>({
+    loaderUrl: "/unity/test15.loader.js",
+    dataUrl: "/unity/test15.data",
+    frameworkUrl: "/unity/test15.framework.js",
+    codeUrl: "/unity/test15.wasm",
+  });
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,22 +90,7 @@ const Memories: React.FC = () => {
       if (docSnap.exists()) {
         const configData = docSnap.data() as BurgerConfig;
         setBurgerConfig(configData);
-
-        const storage = getStorage();
-        const files = await Promise.all([
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.data`)),
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.framework.js`)),
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.wasm`)),
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.loader.js`)),
-        ]);
-        setUnityInstanceUrl({
-          dataUrl: files[0],
-          frameworkUrl: files[1],
-          codeUrl: files[2],
-          loaderUrl: files[3],
-        });
       } else {
-        setUnityInstanceUrl(null);
         setBurgerConfig(null);
       }
     }
