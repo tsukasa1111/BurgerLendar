@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db, auth } from '../firebase/firebase';
 import { doc, getDoc, updateDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { getStorage, ref as storageRef, listAll, getDownloadURL } from "firebase/storage";
 import useViewportHeight from '../hooks/useViewportHeight';
 
 const Profile: React.FC = () => {
@@ -15,6 +16,7 @@ const Profile: React.FC = () => {
     laundry: '',
     sleep: '',
     smoke: '',
+    profileImageUrl: '', // Add profile image URL to state
   });
   const [bathFlags, setBathFlags] = useState({
     朝: false,
@@ -28,6 +30,7 @@ const Profile: React.FC = () => {
   });
   const [user, setUser] = useState<any>(null);
   const viewportHeight = useViewportHeight();
+  const [imageList, setImageList] = useState<string[]>([]); // State to hold list of image URLs
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -35,6 +38,7 @@ const Profile: React.FC = () => {
         setUser(currentUser);
         fetchUserProfile(currentUser.uid);
         fetchProfile(currentUser.uid);
+        fetchImages(currentUser.uid); // Fetch images when user is authenticated
       } else {
         setUser(null);
       }
@@ -54,6 +58,7 @@ const Profile: React.FC = () => {
           ...prevProfile,
           name: data.displayName,
           email: data.email,
+          profileImageUrl: data.profileImageUrl || '', // Set profile image URL if exists
         }));
       } else {
         console.log("No such document in Users!");
@@ -92,6 +97,18 @@ const Profile: React.FC = () => {
     }
   };
 
+  const fetchImages = async (uid: string) => {
+    const storage = getStorage();
+    const listRef = storageRef(storage, `User_Collection/${uid}`);
+    try {
+      const res = await listAll(listRef);
+      const urls = await Promise.all(res.items.map(item => getDownloadURL(item)));
+      setImageList(urls);
+    } catch (error) {
+      console.error("Error fetching images: ", error);
+    }
+  };
+
   const handleEdit = (field: string) => {
     if (isEditing) {
       setEditingField(field);
@@ -126,6 +143,7 @@ const Profile: React.FC = () => {
           laundry: profile.laundry,
           sleep: profile.sleep,
           smoke: profile.smoke,
+          profileImageUrl: profile.profileImageUrl, // Save profile image URL
         });
         setEditingField(null);
       } catch (error) {
@@ -164,6 +182,14 @@ const Profile: React.FC = () => {
     </div>
   );
 
+  const handleImageSelect = (imageUrl: string) => {
+    setProfile(prevProfile => ({
+      ...prevProfile,
+      profileImageUrl: imageUrl,
+    }));
+    setEditingField(null);
+  };
+
   return (
     <div className="profile-container" style={{ height: `${viewportHeight - 120}px` }}>
       <div className="profile-header">
@@ -173,9 +199,26 @@ const Profile: React.FC = () => {
         </button>
       </div>
       <div className="profile-picture-section">
-        <div className="profile-picture">
-          <span role="img" aria-label="burger">🍔</span>
+        <div className="profile-picture" onClick={() => handleEdit('profileImageUrl')}>
+          {profile.profileImageUrl ? (
+            <img src={profile.profileImageUrl} alt="Profile" />
+          ) : (
+            <span role="img" aria-label="burger">🍔</span>
+          )}
         </div>
+        {editingField === 'profileImageUrl' && (
+          <div className="image-list">
+            {imageList.map((imageUrl, index) => (
+              <img
+                key={index}
+                src={imageUrl}
+                alt={`Option ${index}`}
+                className="image-option"
+                onClick={() => handleImageSelect(imageUrl)}
+              />
+            ))}
+          </div>
+        )}
         <div className="edit-profile-text">My Burger</div>
       </div>
 
@@ -279,6 +322,13 @@ const Profile: React.FC = () => {
           justify-content: center;
           align-items: center;
           font-size: 36px;
+          cursor: pointer;
+        }
+
+        .profile-picture img {
+          width: 100%;
+          height: 100%;
+          border-radius: 50%;
         }
 
         .edit-profile-text {
@@ -354,6 +404,20 @@ const Profile: React.FC = () => {
         .profile-row[data-field="sleep"] .profile-label,
         .profile-row[data-field="smoke"] .profile-label {
           font-size: 18px; /* ラベルの文字を大きく */
+        }
+
+        .image-list {
+          display: flex;
+          flex-wrap: wrap;
+          justify-content: center;
+          gap: 10px;
+          padding: 10px;
+        }
+
+        .image-option {
+          width: 50px;
+          height: 50px;
+          cursor: pointer;
         }
       `}</style>
     </div>
