@@ -1,9 +1,5 @@
 import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
-import {
-  doc,
-  setDoc,
-  getDoc
-} from "firebase/firestore";
+import { doc, setDoc, getDoc } from "firebase/firestore";
 import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
@@ -15,43 +11,6 @@ interface ScheduledTask {
   endTime: string;
   done: boolean;
 }
-
-const Webgl: React.FC<{ m: number; c: number; t: number; l: number }> = ({
-  m,
-  c,
-  t,
-  l,
-}) => {
-  const unityContext = new UnityContext({
-    loaderUrl: "unity/test8.loader.js",
-    dataUrl: "unity/test8.data",
-    frameworkUrl: "unity/test8.framework.js",
-    codeUrl: "unity/test8.wasm",
-  });
-
-  const burgerConfig = {
-    meatCount: m,
-    cheeseCount: c,
-    tomatoCount: t,
-    lettuceCount: l,
-  };
-
-  useEffect(() => {
-    unityContext.on("loaded", () => {
-      unityContext.send(
-        "Scripts",
-        "ConfigureBurger",
-        JSON.stringify(burgerConfig)
-      );
-    });
-  }, [unityContext]);
-
-  return (
-    <div style={{ position: "relative" }}>
-      <Unity unityContext={unityContext} style={{ width: 640, height: 640 }} />
-    </div>
-  );
-};
 
 const ScheduleToBurger: React.FC = () => {
   const [schedule, setschedule] = useState<ScheduledTask[]>([]);
@@ -136,29 +95,33 @@ const ScheduleToBurger: React.FC = () => {
 
     const saveArrayToDb = async () => {
       if (!user || !user.uid) {
-        console.error('User not authenticated');
+        console.error("User not authenticated");
         return;
       }
-      const userDocRef = doc(db, 'Users_Burger', user.uid);  // Adjust the path according to your DB schema
-      const burgerDataRef = doc(userDocRef, 'BurgerData', today);  // Use today's date as identifier
-  
+      const userDocRef = doc(db, "Users_Burger", user.uid); // Adjust the path according to your DB schema
+      const burgerDataRef = doc(userDocRef, "BurgerData", today); // Use today's date as identifier
+
       try {
-        await setDoc(burgerDataRef, {
-          cheeseCount: numberArray[1].toString(),
-          lettuceCount: numberArray[3].toString(),
-          meatCount: numberArray[0].toString(),
-          tomatoCount: numberArray[2].toString()
-        }, { merge: true });
-        console.log('Burger data saved successfully!');
+        await setDoc(
+          burgerDataRef,
+          {
+            cheeseCount: numberArray[1].toString(),
+            lettuceCount: numberArray[3].toString(),
+            meatCount: numberArray[0].toString(),
+            tomatoCount: numberArray[2].toString(),
+          },
+          { merge: true }
+        );
+        console.log("Burger data saved successfully!");
       } catch (error) {
-        console.error('Failed to save burger data:', error);
+        console.error("Failed to save burger data:", error);
       }
     };
-  
+
     if (numberArray.length > 0) {
       saveArrayToDb();
     }
-  
+
     return;
   }, [out, db, user, today]);
 
@@ -222,7 +185,6 @@ const ScheduleToBurger: React.FC = () => {
               }}
             >
               <p style={{ fontSize: "1.5em", fontStyle: "italic" }}>{out}</p>
-              <Webgl m={burger[0]} c={burger[1]} t={burger[2]} l={burger[3]} />
             </div>
           ) : (
             <p>Loading quote...</p>
