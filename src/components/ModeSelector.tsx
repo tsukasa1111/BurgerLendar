@@ -343,7 +343,7 @@ const styles: { [key: string]: CSSProperties } = {
     padding: "20px",
     backgroundColor: "#F9ECCB",
     color: "#333",
-    minHeight: "100vh",
+    height: '${viewportHeight - 120}px',
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
