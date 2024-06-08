@@ -26,12 +26,18 @@ const Memories: React.FC = () => {
   const [currentYear, setCurrentYear] = useState(today.getFullYear());
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
-  const [unityInstanceUrl, setUnityInstanceUrl] = useState<UnityInstanceUrls | null>(null);
+  const [unityInstanceUrl, setUnityInstanceUrl] = useState<UnityInstanceUrls | null>({
+    loaderUrl: "/unity/test15.loader.js",
+    dataUrl: "/unity/test15.data",
+    frameworkUrl: "/unity/test15.framework.js",
+    codeUrl: "/unity/test15.wasm",
+  });
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [events, setEvents] = useState<string[]>([]);
   const [burgerConfig, setBurgerConfig] = useState<BurgerConfig | null>(null);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   const unityRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,22 +90,7 @@ const Memories: React.FC = () => {
       if (docSnap.exists()) {
         const configData = docSnap.data() as BurgerConfig;
         setBurgerConfig(configData);
-
-        const storage = getStorage();
-        const files = await Promise.all([
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.data`)),
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.framework.js`)),
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.wasm`)),
-          getDownloadURL(storageRef(storage, `Burger_webgl/test15.loader.js`)),
-        ]);
-        setUnityInstanceUrl({
-          dataUrl: files[0],
-          frameworkUrl: files[1],
-          codeUrl: files[2],
-          loaderUrl: files[3],
-        });
       } else {
-        setUnityInstanceUrl(null);
         setBurgerConfig(null);
       }
     }
@@ -121,7 +112,17 @@ const Memories: React.FC = () => {
 
     try {
       const canvas = await html2canvas(unityRef.current, { useCORS: true });
-      const imageData = canvas.toDataURL("image/png");
+      const squareCanvas = document.createElement('canvas');
+      const squareSize = Math.max(canvas.width, canvas.height);
+      squareCanvas.width = squareSize;
+      squareCanvas.height = squareSize;
+      const context = squareCanvas.getContext('2d');
+      if (context) {
+        context.fillStyle = '#ffffff'; // Set the background color to white
+        context.fillRect(0, 0, squareSize, squareSize);
+        context.drawImage(canvas, (squareSize - canvas.width) / 2, (squareSize - canvas.height) / 2);
+      }
+      const imageData = squareCanvas.toDataURL("image/png");
 
       const storage = getStorage();
       const storagePath = `User_Collection/${user.uid}/${selectedDate}.png`;
@@ -129,6 +130,8 @@ const Memories: React.FC = () => {
 
       await uploadString(imageRef, imageData, "data_url");
       console.log("Screenshot saved successfully");
+      setShowSuccessPopup(true);
+      setTimeout(() => setShowSuccessPopup(false), 3000);
     } catch (error) {
       console.error("Error saving screenshot: ", error);
     }
@@ -161,6 +164,7 @@ const Memories: React.FC = () => {
 
   return (
     <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px`, backgroundColor: "#F9ECCB" }}>
+      {showSuccessPopup && <div className="popup">Screenshot saved successfully!</div>}
       <div className="header w-full shadow-md rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between p-4" style={{ backgroundColor: "#1a237e" }}>
           <button className="text-gray-500" onClick={() => setCurrentMonth((prev) => (prev === 0 ? 11 : prev - 1))}>
@@ -230,6 +234,17 @@ const Memories: React.FC = () => {
         }
         .day.today {
           border: 2px solid blue;
+        }
+        .popup {
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background-color: #4caf50;
+          color: white;
+          padding: 10px 20px;
+          border-radius: 5px;
+          box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
         }
       `}</style>
     </div>

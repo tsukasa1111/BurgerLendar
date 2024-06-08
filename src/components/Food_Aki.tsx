@@ -55,7 +55,7 @@ const FoodAki: React.FC = () => {
       setTimeout(() => {
         setShowCheckmark(false);
         navigate('/sleep');
-      }, 500); // 0.5秒後に次のページに遷移
+      }, 500); 
     } catch (error) {
       console.error("Error saving selected options: ", error);
     }
@@ -73,7 +73,7 @@ const FoodAki: React.FC = () => {
           <>
             <div style={styles.questionContainer}>
               <img src={Akinator} alt="Akinator"  /> 
-              <h2 style={styles.question}>質問2/5:</h2>
+              <h2 style={styles.question}>質問2/4:</h2>
               <p style={styles.subQuestion}>食事をいつしますか？（複数選択可）</p>
             </div>
             <div style={styles.optionsContainer}>

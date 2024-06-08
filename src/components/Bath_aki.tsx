@@ -73,7 +73,7 @@ const BathAki: React.FC = () => {
           <>
             <div style={styles.questionContainer}>
               <img src={Akinator} alt="Akinator"  /> 
-              <h2 style={styles.question}>質問1/5:</h2>
+              <h2 style={styles.question}>質問1/4:</h2>
               <p style={styles.subQuestion}>お風呂いつ入りますか？（複数選択可）</p>
             </div>
             <div style={styles.optionsContainer}>
@@ -99,6 +99,7 @@ const BathAki: React.FC = () => {
     </div>
   );
 };
+
 
 const styles = {
   container: {
