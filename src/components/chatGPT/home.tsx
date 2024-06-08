@@ -101,8 +101,8 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     const currentDate = getCurrentDateFormatted();
 
     try {
-      const docRef = doc(db, "schedule", userId,"schedule", currentDate);
-      await setDoc(docRef, {scheduleEvents}); 
+      const docRef = doc(db, "schedule", userId, "schedule", currentDate);
+      await setDoc(docRef, { ...scheduleEvents });
       console.log("Event has been added!");
     } catch (error) {
       console.error("Error adding event: ", error);

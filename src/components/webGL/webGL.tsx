@@ -11,6 +11,7 @@ interface BurgerConfig {
 }
 
 function Webgl() {
+
   const [burgerConfig, setBurgerConfig] = useState<BurgerConfig>({
     meatCount: 10,
     cheeseCount: 2,
@@ -81,7 +82,7 @@ function Webgl() {
 
   return (
     <div style={{ position: "relative" }}>
-      <Unity unityContext={unityContext} style={{ width: 640, height: 640 }} />
+      <Unity unityContext={unityContext} style={{ width: 1240, height: 1240 }} />
     </div>
   );
 }
