@@ -272,7 +272,7 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
     you have to take a bath in ${Aki.bath.map((item, index) => item).join(",")} and each time takes 30 minutes.
     you have to eat in ${Aki.food.map((item, index) => item).join(",")} and each time takes 45 minutes.
     you have to smoke ${Aki.smoke} times per day and each time take 10 minutes.
-    you have to wake up at 7am and sleep at 10pm.
+    you have to wake up at 7AM and sleep at 10PM.
     And you can add free time when event are not scheduled.
     
     Please organize the schedule, followed by a short description if available and Schedule title in one word. 
