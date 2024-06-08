@@ -24,6 +24,7 @@ import Memories from "./components/memories";
 import Loading from "./components/chatGPT/loading/welcometoBurger";
 import Profile from "./components/Profile";
 import ModeSelector from "./components/ModeSelector";
+import GPT from "./components/Bur_Home";
 import WebglApp from "./components/webGL/page";
 
 function App() {
@@ -48,6 +49,7 @@ function App() {
           <Route path="/memories" element={<Memories />} />
           <Route path="/loading" element={<Loading mode="relax" />} />
           <Route path="/webgl" element={<WebglApp />} />
+          <Route path="/home" element={<GPT mode="relax" />} />
         </Routes>
       </div>
       <ConditionalFooter />
