@@ -49,7 +49,7 @@ const Aki_Smoke: React.FC = () => {
         setShowCheckmark(true);
         setTimeout(() => {
           setShowCheckmark(false);
-          navigate('/modeselector'); // 必要に応じて次のページに遷移
+          navigate("/modeselector"); // 必要に応じて次のページに遷移
         }, 500); // 0.5秒後に次のページに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);
@@ -61,12 +61,16 @@ const Aki_Smoke: React.FC = () => {
   };
 
   return (
-    <div style={{ ...styles.container, height: viewportHeight-60 }}>
+    <div style={{ ...styles.container, height: viewportHeight - 60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
       <main style={styles.main}>
-        <img src={Akinator} alt="My Image" />
+        <img
+          src={Akinator}
+          alt="My Image"
+          style={{ width: "90%", height: "60%" }}
+        />
         {showCheckmark ? (
           <CheckCircleOutlineIcon style={styles.checkmark} />
         ) : (
@@ -150,6 +154,16 @@ const styles = {
     margin: "0",
     color: "#000",
   },
+  optionButton: {
+    width: "80%",
+    padding: "10px 0",
+    margin: "10px 0",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "1em",
+    color: "#000",
+  },
   optionsContainer: {
     display: "flex",
     flexDirection: "column" as "column",
@@ -168,12 +182,7 @@ const styles = {
     fontSize: "4em",
     color: "#f4a261",
   },
-  // submitButton: {
-  //   // existing styles
-  //   "&:hover": {
-  //     backgroundColor: hovered ? "#ffa94d" : cigarettesPerDay === "" ? "#ccc" : "#f4a261",
-  //   },
-  // },
+  
 };
 
 export default Aki_Smoke;
