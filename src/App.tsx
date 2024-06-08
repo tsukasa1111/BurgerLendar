@@ -16,6 +16,7 @@ import LaunAki from "./components/Laun_Aki";
 import Aki_Sleep from "./components/Sleep_Aki";
 import Aki_Smoke from "./components/Smoke_Aki";
 import Bur_Home from "./components/Bur_Home";
+import Homme from "./components/Home_on";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import EventCalendar from "./components/calendar";
@@ -52,6 +53,7 @@ function App() {
           <Route path="/webgl" element={<WebglApp />} />
           <Route path="/schedule" element={<ScheduleToBurger />} />
           <Route path="/home" element={<GPT mode="relax" />} />
+          <Route path="/homme" element={<Homme />} />
         </Routes>
       </div>
       <ConditionalFooter />
@@ -63,6 +65,7 @@ function ConditionalFooter() {
   const location = useLocation();
   const footerPaths = [
     "/home",
+    "/homme",
     "/calendar",
     "/todo",
     "/memories",

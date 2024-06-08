@@ -9,6 +9,8 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import MemoryIcon from '@mui/icons-material/Memory';
 import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
+import { auth, db } from '../firebase/firebase'; // Firestoreインスタンスのインポート
+import { doc, getDoc } from 'firebase/firestore';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
@@ -38,27 +40,49 @@ const Footer: React.FC = () => {
     }
   }, [location.pathname]);
 
-  const handleChange = (event: React.SyntheticEvent, newValue: number) => {
+  const getCurrentDateFormatted = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, '0');
+    const day = now.getDate().toString().padStart(2, '0');
+    return `${year}${month}${day}`; // 'YYYYMMDD'形式で日付を返す
+  };
+
+  const handleChange = async (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
-    switch (newValue) {
-      case 0:
-        navigate('/home');
-        break;
-      case 1:
-        navigate('/calendar');
-        break;
-      case 2:
-        navigate('/todo');
-        break;
-      case 3:
-        navigate('/memories');
-        break;
-      case 4:
-        navigate('/profile');
-        break;
-      default:
-        navigate('/home');
-        break;
+    if (newValue === 0) {
+      // Firebase Firestoreで今日のスケジュールを確認する
+      const currentUser = auth.currentUser;
+      if (currentUser) {
+        const today = new Date().toISOString().split('T')[0];
+        const docRef = doc(db, 'users', currentUser.uid, 'schedule', today);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          navigate('/homme');
+        } else {
+          navigate('/modeselector');
+        }
+      } else {
+        navigate('/homme');
+      }
+    } else {
+      switch (newValue) {
+        case 1:
+          navigate('/calendar');
+          break;
+        case 2:
+          navigate('/todo');
+          break;
+        case 3:
+          navigate('/memories');
+          break;
+        case 4:
+          navigate('/profile');
+          break;
+        default:
+          navigate('/home');
+          break;
+      }
     }
   };
 

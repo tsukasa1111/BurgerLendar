@@ -1,26 +1,7 @@
-import { WidthFull } from "@mui/icons-material";
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  ChangeEvent,
-  FormEvent,
-} from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { db, auth } from "../../firebase/firebase";
-import {
-  collection,
-  addDoc,
-  getDocs,
-  updateDoc,
-  deleteDoc,
-  setDoc,
-  doc,
-  query,
-  where,
-  arrayUnion,
-} from "firebase/firestore";
+import { doc, setDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
-import { set } from "date-fns";
 
 interface ScheduleEvent {
   startTime: string;
@@ -65,11 +46,11 @@ function parseSchedule(text: string): ScheduleEvent[] {
   return events;
 }
 
-interface AnotherComponentProps {
+interface HomeProps {
   output: string;
 }
 
-const Home: React.FC<AnotherComponentProps> = ({ output }) => {
+const Home: React.FC<HomeProps> = ({ output }) => {
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
   const [checkedEvents, setCheckedEvents] = useState<Set<number>>(new Set());
   const [formattedText, setFormattedText] = useState<string>("");
@@ -89,12 +70,13 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
 
     return () => unsubscribe();
   }, []);
+  
   function getCurrentDateFormatted() {
     const today = new Date();
-    const year = today.getFullYear().toString().slice(2); // 年の下2桁を取得
-    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // 月を2桁で取得
-    const day = today.getDate().toString().padStart(2, "0"); // 日を2桁で取得
-    return year + month + day; // 結合して文字列を返す
+    const year = today.getFullYear().toString().slice(2);
+    const month = (today.getMonth() + 1).toString().padStart(2, "0");
+    const day = today.getDate().toString().padStart(2, "0");
+    return year + month + day;
   }
 
   const handleAddEvent = async (userId: string) => {
@@ -102,7 +84,8 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
 
     try {
       const docRef = doc(db, "schedule", userId, "schedule", currentDate);
-      await setDoc(docRef, { ...scheduleEvents });
+      console.log(currentDate);
+      await setDoc(docRef, { scheduleEvents });
       console.log("Event has been added!");
     } catch (error) {
       console.error("Error adding event: ", error);
@@ -116,6 +99,7 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     setFormattedText(formatted);
     return formatted;
   };
+
   useEffect(() => {
     const events = parseSchedule(formatSchedule(output));
     setScheduleEvents(events);
@@ -182,9 +166,6 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     const currentEvent = sortedEvents.splice(currentEventIndex, 1)[0];
     sortedEvents.unshift(currentEvent);
   }
-  // console.log("schedule");
-  // console.log(scheduleEvents);
-  //console.log(formattedText);
 
   return (
     <div className="schedule-container">
