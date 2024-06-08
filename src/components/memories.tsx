@@ -27,10 +27,10 @@ const Memories: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewportHeight, setViewportHeight] = useState(window.innerHeight);
   const [unityInstanceUrl, setUnityInstanceUrl] = useState<UnityInstanceUrls | null>({
-    loaderUrl: "/unity/test15.loader.js",
-    dataUrl: "/unity/test15.data",
-    frameworkUrl: "/unity/test15.framework.js",
-    codeUrl: "/unity/test15.wasm",
+    loaderUrl: "/unity/hamberger.loader.js",
+    dataUrl: "/unity/hamberger.data",
+    frameworkUrl: "/unity/hamberger.framework.js",
+    codeUrl: "/unity/hamberger.wasm",
   });
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);

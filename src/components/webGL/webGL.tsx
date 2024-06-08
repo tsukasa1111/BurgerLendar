@@ -20,10 +20,10 @@ function Webgl() {
   });
 
   const unityContext = new UnityContext({
-    loaderUrl: "./public/unity/test15.loader.js",
-    dataUrl: "./public/unity/test15.data",
-    frameworkUrl: "./public/unity/test15.framework.js",
-    codeUrl: "./public/unity/test15.wasm",
+    loaderUrl: "./public/unity/hamberger.loader.js",
+    dataUrl: "./public/unity/hamberger.data",
+    frameworkUrl: "./public/unity/hamberger.framework.js",
+    codeUrl: "./public/unity/hamberger.wasm",
   });
   
 
