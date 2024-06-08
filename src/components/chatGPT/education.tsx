@@ -72,18 +72,13 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
   const [today, setToday] = useState<string>("");
   const [countdata, setcountdata] = useState<number>(0);
 
-  const getCurrentDateFormatted = () => {
-    const now = new Date();
-    const year = now.getFullYear(); // 年を取得
-    const month = now.getMonth() + 1; // 月を取得（月は0から始まるため+1する）
-    const day = now.getDate(); // 日を取得
-
-    // MMとDDの形式を保証するために、必要に応じて0を追加
-    const formattedMonth = month < 10 ? `0${month}` : month;
-    const formattedDay = day < 10 ? `0${day}` : day;
-
-    return `${year}${"-"}${formattedMonth}${"-"}${formattedDay}`; // 'YYYY-MMDD'の形式で返す
-  };
+  function getCurrentDateFormatted() {
+    const today = new Date();
+    const year = today.getFullYear().toString().slice(2); // 年の下2桁を取得
+    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // 月を2桁で取得
+    const day = today.getDate().toString().padStart(2, "0"); // 日を2桁で取得
+    return year + month + day; // 結合して文字列を返す
+  }
 
   useEffect(() => {
     if (mode === "relax") {
@@ -289,6 +284,7 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
+          //gpt-4o
           model: "gpt-3.5-turbo",
           messages: [{ role: "system", content: prompt }],
         },
