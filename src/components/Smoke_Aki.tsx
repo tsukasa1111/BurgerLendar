@@ -72,7 +72,7 @@ const Aki_Smoke: React.FC = () => {
         ) : (
           <>
             <div style={styles.questionContainer}>
-              <h2 style={styles.question}>質問5/5:</h2>
+              <h2 style={styles.question}>質問4/4:</h2>
               <p style={styles.subQuestion}>タバコ1日に何本吸いますか？</p>
             </div>
             <div style={styles.optionsContainer}>
