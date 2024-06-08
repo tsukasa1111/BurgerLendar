@@ -13,7 +13,6 @@ const Profile: React.FC = () => {
     email: '',
     bath: '',
     food: '',
-    laundry: '',
     sleep: '',
     smoke: '',
     profileImageUrl: '', // Add profile image URL to state
@@ -141,7 +140,6 @@ const Profile: React.FC = () => {
         await updateDoc(docRef, {
           bath: Object.keys(bathFlags).filter(key => bathFlags[key as keyof typeof bathFlags]),
           food: Object.keys(foodFlags).filter(key => foodFlags[key as keyof typeof foodFlags]),
-          laundry: profile.laundry,
           sleep: profile.sleep,
           smoke: profile.smoke,
           profileImageUrl: profile.profileImageUrl, // Save profile image URL
@@ -274,7 +272,6 @@ const Profile: React.FC = () => {
             ))}
           </div>
         </div>
-        {renderProfileRow('Laundry', profile.laundry, 'laundry', '回/週')}
         {renderProfileRow('Sleep', profile.sleep, 'sleep', '時間/日')}
         {renderProfileRow('Smoke', profile.smoke, 'smoke', '本/日')}
       </div>
