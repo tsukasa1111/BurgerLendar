@@ -162,7 +162,7 @@ const Header: React.FC = () => {
       <IconButton edge="start" color="inherit" aria-label="menu" className="menu-button" onClick={handleOpen}>
         <MenuIcon />
       </IconButton>
-      <h1 className="title" style={{ color: 'white' }}>BurgerLendar</h1>
+      <h1 className="title">BurgerLendar</h1>
       <IconButton edge="end" color="inherit" aria-label="logout" onClick={handleLogout} className="logout-button">
         <ExitToAppIcon />
       </IconButton>
