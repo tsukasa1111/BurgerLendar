@@ -5,6 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import Akinator from "./akinator.png"; // 画像のインポート
+import useViewportHeight from "../hooks/useViewportHeight"; // Import the custom hook
 
 const Aki_Smoke: React.FC = () => {
   const [user, setUser] = useState<any>(null);
@@ -12,6 +13,7 @@ const Aki_Smoke: React.FC = () => {
   const [hovered, setHovered] = useState<boolean>(false);
   const navigate = useNavigate();
   const [cigarettesPerDay, setCigarettesPerDay] = useState<number | "">("");
+  const viewportHeight = useViewportHeight(); // Use the custom hook
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -47,7 +49,7 @@ const Aki_Smoke: React.FC = () => {
         setShowCheckmark(true);
         setTimeout(() => {
           setShowCheckmark(false);
-          navigate('/home'); // 必要に応じて次のページに遷移
+          navigate('/modeselector'); // 必要に応じて次のページに遷移
         }, 500); // 0.5秒後に次のページに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);
@@ -59,7 +61,7 @@ const Aki_Smoke: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, height: viewportHeight-60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>

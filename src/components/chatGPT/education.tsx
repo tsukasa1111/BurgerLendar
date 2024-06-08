@@ -21,6 +21,7 @@ import Home from "./home";
 import axios from "axios";
 import { CSSProperties } from "react";
 import { set } from "date-fns";
+import { start } from "repl";
 
 interface Item {
   id: string;
@@ -37,9 +38,10 @@ interface ScheduledTask {
   deadline: string;
 }
 interface Event {
-  id: string;
   name: string;
   date: string;
+  startTime: string;
+  endTime: string;
 }
 interface aki {
   bath: string[];
@@ -67,24 +69,23 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<any>(null);
   const [quote, setQuote] = useState<Quote | null>(null);
+  const [today, setToday] = useState<string>("");
+  const [countdata, setcountdata] = useState<number>(0);
+
+  const getCurrentDateFormatted = () => {
+    const now = new Date();
+    const year = now.getFullYear(); // 年を取得
+    const month = now.getMonth() + 1; // 月を取得（月は0から始まるため+1する）
+    const day = now.getDate(); // 日を取得
+
+    // MMとDDの形式を保証するために、必要に応じて0を追加
+    const formattedMonth = month < 10 ? `0${month}` : month;
+    const formattedDay = day < 10 ? `0${day}` : day;
+
+    return `${year}${"-"}${formattedMonth}${"-"}${formattedDay}`; // 'YYYY-MMDD'の形式で返す
+  };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-      }
-    });
-
-    return () => {
-      unsubscribe();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!user) {
-      console.log("User is not authenticated or not available.");
-      return; // ユーザーがいない場合は早期リターン
-    }
     if (mode === "relax") {
       const randomQuote =
         NonMotivationQuotes[
@@ -108,68 +109,93 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       return;
     }
     throw new Error("No such document!");
-  }, [user]);
+  }, []);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser);
+        fetchEvents(currentUser.uid);
+
+        fetchtodos(currentUser.uid);
+
+        fetchUserName(currentUser.uid);
+
+        fetchUserAki(currentUser.uid);
+      } else {
+        setUser(null);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   /////////////////////////////////////////////////////////
-  const fetchUserAki = async () => {
+  async function fetchUserAki(userId: string) {
     try {
-      const docRef = doc(db, "Users_Aki", user.uid);
+      const docRef = doc(db, "Users_Aki", userId);
       const docSnap = await getDoc(docRef);
-
+      const data = docSnap.data() as aki;
+      console.log("aki", data);
+      setAki(data);
+      setcountdata(countdata + 1);
       if (docSnap.exists()) {
-        const data = docSnap.data() as aki;
-        setAki({
-          ...data,
-        });
       } else {
         console.log("No such document!");
       }
     } catch (err) {
       console.error("Error fetching user data:", err);
     }
-  };
-  const fetchEvents = async () => {
-    try {
-      const eventsRef = collection(db, "users", user.uid, "events");
+  }
 
-      const q = query(eventsRef);
-      const querySnapshot = await getDocs(q);
+  const fetchEvents = async (userId: string) => {
+    try {
+      const eventsRef = query(collection(db, "users", userId, "events"));
+
+      const querySnapshot = await getDocs(eventsRef);
       const fetchedEvents = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        name: doc.data().title,
         date: doc.data().date,
+        name: doc.data().title,
+        endTime: doc.data().endTime,
+        startTime: doc.data().startTime,
+        
       }));
+      console.log("event", fetchedEvents);
 
       setEvents(fetchedEvents);
+
       // console.log("events:", events);
     } catch (err) {
       throw new Error("Error fetching user data:");
     }
   };
-  const fetchtodos = async () => {
+  const fetchtodos = async (userId: string) => {
     try {
-      const eventsRef = collection(db, "users", user.uid, "todos");
-      const q = query(eventsRef);
-      const querySnapshot = await getDocs(q);
+      const eventsRef = query(collection(db, "users", userId, "todos"));
+      const querySnapshot = await getDocs(eventsRef);
       const fetchedTodos = querySnapshot.docs.map((doc) => ({
         Title: doc.data().text,
         deadline: doc.data().dueDate,
+        
       }));
-
+      console.log("todos", fetchedTodos);
       setScheduleTasks(fetchedTodos);
+      setcountdata(countdata + 1);
+
       // console.log("todos:", scheduleTasks);
     } catch (err) {
       throw new Error("Error fetching user data:");
     }
   };
-  const fetchUserName = async () => {
+  const fetchUserName = async (userId: string) => {
     try {
-      const docRef = doc(db, "Users", user.uid);
+      const docRef = doc(db, "Users", userId);
       const docSnap = await getDoc(docRef);
       if (docSnap.exists()) {
         const data = docSnap.data();
+        console.log("username", data?.displayName);
         setUserName(data?.displayName);
-        
+        setcountdata(countdata + 1);
       } else {
         console.log("No such document in Users!");
       }
@@ -179,65 +205,82 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
   };
 
   useEffect(() => {
-    async function fetchData() {
-      if (!user) {
-        console.log("User is not authenticated or not available.");
-        return;
-      }
-      try {
-        await Promise.all([
-          fetchUserAki(),
-          fetchEvents(),
-          fetchtodos(),
-          fetchUserName(),
-        ]);
-        console.log("All data fetching complete");
-        handleSubmit();
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
+    if (countdata < 1) {
+      return;
     }
+    handleSubmit();
+  }, [countdata]);
 
-    fetchData();
-  }, [quote]);
-
-  useEffect(() => {
-    if (events.length >= 1 || scheduleTasks.length >= 1) {
-      handleSubmit();
-      console.log("you finished handleSubmit");
-    }
-  }, []);
+  // useEffect(() => {
+  //   async function fetchData() {
+  //     if (!user) {
+  //       console.log("User is not authenticated or not available in fetchdata.");
+  //       return;
+  //     }
+  //     try {
+  //       await Promise.all([
+  //         fetchUserAki(),
+  //         fetchEvents(),
+  //         fetchtodos(),
+  //         fetchUserName(),
+  //       ]);
+  //       handleSubmit();
+  //     } catch (error) {
+  //       console.error("Error fetching data:", error);
+  //     }
+  //   }
+  //   return () => {
+  //     fetchData();
+  //   };
+  // }, [user]);
 
   const handleSubmit = async () => {
+    console.log("aki in handlesubmit", Aki);
+    console.log("mode in handlesubmit", mode);
+    console.log("scheduledtask in handlesubmit", scheduleTasks);
+    console.log("events in handlesubmit", events);
+    console.log("username in handlesubmit", userName);
+    setToday(getCurrentDateFormatted());
     const prompt = `
-    Given the following schedule items and tasks with their respective start and end times,
-    and considering the motivation level for the day (${mode}).
+    Generate schedule considering the motivation level for the day (${mode}) usign given data.
     if (mode) is relax, you can not need to include any other tasks.
     if (mode) is normal, please put in one task that is closest to the due date.
     if (mode) is hard, put in as many tasks as possible in order of due date.
-    organize a schedule in the specified format.
+    But if you have a task that is deadline is today, you need to put it in the schedule.
+    organize a schedule in the specified format and today's date is (${today}) .
 
-    Schedule Items(To be done at a specific time during the day):
+    Schedule Items(To be done at a specific time during the day and make sure the today's date is ${today},so you can
+    only put in event that Date is today.):
     ${events
-      .map((item) => `ItemName: ${item.name}, DeadlineDay: ${item.date}`)
+      .map(
+        (item) =>
+          `EventName: ${item.name}, Date: ${item.date},startTime: ${item.startTime}, endTime: ${item.endTime}`
+      )
       .join("\n")}
 
-    Tasks (To be done at any time during the day):
-    - ${scheduleTasks.join("\n- ")}
-
-    Scheduled Tasks (with Deadline but you don't have to do it during the day, just need to finish it by the deadline):
+    Scheduled Tasks (You need to finish it by the deadline and each task take 30 minutes to complete and 
+    you can't put in tasks that are Dealine is overdue.):
     ${scheduleTasks
-      .map((task) => `Title: ${task.Title}, Deadline: ${task.deadline}`)
+      .map(
+        (ScheduleTasks) =>
+          `Title: ${ScheduleTasks.Title}, Deadline: ${ScheduleTasks.deadline}`
+      )
       .join("\n")}
 
+  
+    And you have to add the following tasks in the schedule.
+    you have to take a bath in ${Aki.bath.map((item, index) => item).join(",")} and each time takes 30 minutes.
+    you have to eat in ${Aki.food.map((item, index) => item).join(",")} and each time takes 45 minutes.
+    you have to smoke ${Aki.smoke} times per day and each time take 10 minutes.
+    you have to wake up at 7AM and sleep at 10PM.
+    And you can add free time when event are not scheduled.
+    
     Please organize the schedule, followed by a short description if available and Schedule title in one word. 
     Use the format:
     hh:mm - Schedule Title
-    Description
 
-    And you have to add breakfast,lunch,dinner and sleep and smoke(7times and each time take 10 minutes) in the schedule.
-    
     If there is no task, do not write anything about the task.
+    Dont't put in schedule other than the given data. 
 
     Generate a schedule considering the best times to fit the tasks around the fixed schedule items, optimizing productivity based on the motivation level.
         `;
@@ -256,7 +299,7 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
           },
         }
       );
-      console.log(response.data.choices[0].message.content)
+      console.log(response.data.choices[0].message.content);
       setOutput(response.data.choices[0].message.content);
       setout(response.data.choices[0].message.content);
     } catch (error) {

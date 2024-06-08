@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BottomNavigation, BottomNavigationAction } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined';
 import EventIcon from '@mui/icons-material/Event';
@@ -12,7 +12,31 @@ import MemoryOutlinedIcon from '@mui/icons-material/MemoryOutlined';
 
 const Footer: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [value, setValue] = React.useState(0);
+
+  useEffect(() => {
+    switch (location.pathname) {
+      case '/home':
+        setValue(0);
+        break;
+      case '/calendar':
+        setValue(1);
+        break;
+      case '/todo':
+        setValue(2);
+        break;
+      case '/memories':
+        setValue(3);
+        break;
+      case '/profile':
+        setValue(4);
+        break;
+      default:
+        setValue(0);
+        break;
+    }
+  }, [location.pathname]);
 
   const handleChange = (event: React.SyntheticEvent, newValue: number) => {
     setValue(newValue);
@@ -33,7 +57,7 @@ const Footer: React.FC = () => {
         navigate('/profile');
         break;
       default:
-        navigate('/mode-selector');
+        navigate('/home');
         break;
     }
   };

@@ -13,12 +13,14 @@ import {
   getDocs,
   updateDoc,
   deleteDoc,
+  setDoc,
   doc,
   query,
   where,
   arrayUnion,
 } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
+import { set } from "date-fns";
 
 interface ScheduleEvent {
   startTime: string;
@@ -73,11 +75,13 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
   const [formattedText, setFormattedText] = useState<string>("");
   const currentEventRef = useRef<HTMLLIElement | null>(null);
   const [user, setUser] = useState<any>(null);
+  const [userid, setUserid] = useState<string>("");
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        setUserid(currentUser.uid);
       } else {
         setUser(null);
       }
@@ -93,22 +97,16 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
     return year + month + day; // 結合して文字列を返す
   }
 
-  const handleAddEvent = async () => {
+  const handleAddEvent = async (userId: string) => {
     const currentDate = getCurrentDateFormatted();
 
-    if (!user) {
-      alert("User is not authenticated");
-      return;
-    }
     try {
-      await addDoc(collection(db, "schedule", user.uid, currentDate), {
-        arayField: arrayUnion(...scheduleEvents),
-      });
-
-      alert("Event has been added!");
+      const docRef = doc(db, "schedule", userId,"schedule", currentDate);
+      await setDoc(docRef, {scheduleEvents}); 
+      console.log("Event has been added!");
     } catch (error) {
       console.error("Error adding event: ", error);
-      alert("Failed to add event");
+      console.log("Failed to add event");
     }
   };
 
@@ -121,10 +119,10 @@ const Home: React.FC<AnotherComponentProps> = ({ output }) => {
   useEffect(() => {
     const events = parseSchedule(formatSchedule(output));
     setScheduleEvents(events);
-    handleAddEvent();
   }, [output]);
 
   useEffect(() => {
+    handleAddEvent(userid);
     if (currentEventRef.current) {
       currentEventRef.current.scrollIntoView({
         behavior: "smooth",

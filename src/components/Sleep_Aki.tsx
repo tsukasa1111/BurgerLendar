@@ -5,6 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import Akinator from "./akinator.png"; //
+import useViewportHeight from "../hooks/useViewportHeight"; // Import the custom hook
 
 const Aki_Sleep: React.FC = () => {
   const [sleepPerDay, setSleepPerDay] = useState<number | "">("");
@@ -12,6 +13,7 @@ const Aki_Sleep: React.FC = () => {
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
   const [hovered, setHovered] = useState<boolean>(false);
   const navigate = useNavigate();
+  const viewportHeight = useViewportHeight(); // Use the custom hook
 
   // Monitor auth state
   useEffect(() => {
@@ -52,7 +54,7 @@ const Aki_Sleep: React.FC = () => {
         setShowCheckmark(true);
         setTimeout(() => {
           setShowCheckmark(false);
-          navigate("/smoke");
+          navigate("/laun");
         }, 500); // 0.5秒後に次のページに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);
@@ -66,7 +68,7 @@ const Aki_Sleep: React.FC = () => {
   const options = Array.from({ length: 13 }, (_, i) => i); // Changed to numbers
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, height: viewportHeight-60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
@@ -77,7 +79,7 @@ const Aki_Sleep: React.FC = () => {
           <>
             <div style={styles.questionContainer}>
               <img src={Akinator} alt="My Image" />
-              <h2 style={styles.question}>質問4/5:</h2>
+              <h2 style={styles.question}>質問3/5:</h2>
               <p style={styles.subQuestion}>睡眠どれくらいしますか？</p>
             </div>
             <div style={styles.optionsContainer}>

@@ -184,8 +184,8 @@ const Calendar = () => {
   };
 
   return (
-    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px`, backgroundColor: '#F9ECCB' }}>
-      <div className="header w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
+    <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px` }}>
+      <div className="header w-full shadow-md rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
           <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
           <h2 className="text-lg font-bold text-white cursor-pointer">{`${currentYear}年${currentMonth + 1}月`}</h2>
@@ -257,22 +257,23 @@ const Calendar = () => {
             ))}
           {selectedDate && (
             <button
-              className="mt-2 inline-flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-500 fixed bottom-24 right-8"
-              onClick={() => {
-                setEventToEdit(null);
-                setNewEvent({
-                  id: '',
-                  title: '',
-                  date: '',
-                  startTime: '',
-                  endTime: '',
-                  description: '',
-                });
-                setShowModal(true);
-              }}
-            >
-              <PlusIcon className="h-8 w-8" aria-hidden="true" />
-            </button>
+            className="mt-2 inline-flex items-center justify-center rounded-full bg-blue-600 p-4 text-white shadow-lg hover:bg-blue-500 fixed bottom-24"
+            style={{ right: '20%' }}  // ここでボタンを少し左に配置しています。
+            onClick={() => {
+              setEventToEdit(null);
+              setNewEvent({
+                id: '',
+                title: '',
+                date: '',
+                startTime: '',
+                endTime: '',
+                description: '',
+              });
+              setShowModal(true);
+            }}
+          >
+            <PlusIcon className="h-8 w-8" aria-hidden="true" />
+          </button>
           )}
         </div>
 

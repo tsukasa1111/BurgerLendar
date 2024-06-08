@@ -5,12 +5,14 @@ import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // useNavigateをインポート
 import Akinator from "./akinator.png"; 
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
+import useViewportHeight from '../hooks/useViewportHeight'; // Import the custom hook
 
 const BathAki: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
   const navigate = useNavigate(); // useNavigateフックを使用
+  const viewportHeight = useViewportHeight(); // Use the custom hook
 
   // Monitor auth state
   useEffect(() => {
@@ -60,7 +62,7 @@ const BathAki: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, height: viewportHeight-60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
@@ -70,12 +72,11 @@ const BathAki: React.FC = () => {
         ) : (
           <>
             <div style={styles.questionContainer}>
-            <img src={Akinator} alt="Akinator"  /> 
+              <img src={Akinator} alt="Akinator"  /> 
               <h2 style={styles.question}>質問1/5:</h2>
               <p style={styles.subQuestion}>お風呂いつ入りますか？（複数選択可）</p>
             </div>
             <div style={styles.optionsContainer}>
-              
               {['朝', '昼', '夜'].map(option => (
                 <button
                   key={option}
@@ -105,7 +106,6 @@ const styles = {
     flexDirection: 'column' as 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    height: 'calc(100vh - 60px)',
     backgroundColor: '#1d3557',
     color: '#f4a261',
   },

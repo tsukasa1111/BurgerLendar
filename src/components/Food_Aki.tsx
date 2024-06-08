@@ -6,12 +6,14 @@ import { useNavigate } from "react-router-dom"; // useNavigateをインポート
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import Akinator from "./akinator.png"; 
 import { Height } from '@mui/icons-material';
+import useViewportHeight from "../hooks/useViewportHeight"; // Import the custom hook
 
 const FoodAki: React.FC = () => {
   const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
   const [user, setUser] = useState<any>(null);
   const navigate = useNavigate();
   const [showCheckmark, setShowCheckmark] = useState<boolean>(false);
+  const viewportHeight = useViewportHeight(); // Use the custom hook
 
   // Monitor auth state
   useEffect(() => {
@@ -39,20 +41,20 @@ const FoodAki: React.FC = () => {
     }
     if (selectedOptions.length === 0) {
       console.error("オプションを選択してください");
-      return;
+      
     }
 
     try {
       const userAkiRef = doc(db, "Users_Aki", user.uid);
       await setDoc(userAkiRef, {
-        bath: selectedOptions,
+        food: selectedOptions,
         created_at: serverTimestamp()
       }, { merge: true });
       console.log("Selected options saved successfully.");
       setShowCheckmark(true);
       setTimeout(() => {
         setShowCheckmark(false);
-        navigate('/laun');
+        navigate('/sleep');
       }, 500); // 0.5秒後に次のページに遷移
     } catch (error) {
       console.error("Error saving selected options: ", error);
@@ -60,7 +62,7 @@ const FoodAki: React.FC = () => {
   };
 
   return (
-    <div style={styles.container}>
+    <div style={{ ...styles.container, height: viewportHeight-60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
