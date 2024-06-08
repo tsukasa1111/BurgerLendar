@@ -45,7 +45,7 @@ export const Login = () => {
       const yymmdd = `${yy}${mm}${dd}`;
       console.log("Checking for document with date:", yymmdd);
 
-      const docRef = doc(db, 'scedule', user.uid, 'dates', yymmdd);
+      const docRef = doc(db, 'scehdule', user.uid, 'dates', yymmdd);
       const docSnap = await getDoc(docRef);
 
       if (docSnap.exists()) {

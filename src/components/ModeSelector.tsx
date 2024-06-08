@@ -208,6 +208,7 @@ const App: React.FC = () => {
         <>
           {weatherData ? (
             <div className="weather-container" style={styles.weatherContainer}>
+              
               <div className="weather" style={styles.weather}>
                 <div className="weather-info" style={styles.weatherInfo}>
                   <div className="date" style={styles.date}>
