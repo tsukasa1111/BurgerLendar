@@ -25,6 +25,7 @@ import Loading from "./components/chatGPT/loading/welcometoBurger";
 import Profile from "./components/Profile";
 import ModeSelector from "./components/ModeSelector";
 import WebglApp from "./components/webGL/page";
+import ScheduleToBurger from "./components/chatGPT/scheduleToBurger";
 
 function App() {
   return (
@@ -48,6 +49,7 @@ function App() {
           <Route path="/memories" element={<Memories />} />
           <Route path="/loading" element={<Loading mode="relax" />} />
           <Route path="/webgl" element={<WebglApp />} />
+          <Route path="/schedule" element={<ScheduleToBurger />} />
         </Routes>
       </div>
       <ConditionalFooter />
