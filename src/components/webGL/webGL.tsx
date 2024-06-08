@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import Unity, { UnityContext } from "react-unity-webgl";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
 import { getFirestore, doc, getDoc } from "firebase/firestore";
-import { getStorage, getDownloadURL, ref as storageRef } from "firebase/storage";
 
 interface BurgerConfig {
   meatCount: number;
@@ -19,44 +18,13 @@ function Webgl() {
     lettuceCount: 2,
   });
 
-  const [unityInstanceUrls, setUnityInstanceUrls] = useState({
-    loaderUrl: "",
-    dataUrl: "",
-    frameworkUrl: "",
-    codeUrl: "",
-  });
-
-  useEffect(() => {
-    const storage = getStorage();
-
-    // Firebase Storage の URL を取得する
-    const getUnityFilesUrls = async () => {
-      try {
-        const loaderUrl = await getDownloadURL(storageRef(storage, "Burger_webgl/test15.loader.js"));
-        const dataUrl = await getDownloadURL(storageRef(storage, "Burger_webgl/test15.data"));
-        const frameworkUrl = await getDownloadURL(storageRef(storage, "Burger_webgl/test15.framework.js"));
-        const codeUrl = await getDownloadURL(storageRef(storage, "Burger_webgl/test15.wasm"));
-
-        setUnityInstanceUrls({
-          loaderUrl,
-          dataUrl,
-          frameworkUrl,
-          codeUrl,
-        });
-      } catch (error) {
-        console.error("Error fetching Unity files URLs: ", error);
-      }
-    };
-
-    getUnityFilesUrls();
-  }, []);
-
   const unityContext = new UnityContext({
-    loaderUrl: unityInstanceUrls.loaderUrl,
-    dataUrl: unityInstanceUrls.dataUrl,
-    frameworkUrl: unityInstanceUrls.frameworkUrl,
-    codeUrl: unityInstanceUrls.codeUrl,
+    loaderUrl: "./public/unity/test15.loader.js",
+    dataUrl: "./public/unity/test15.data",
+    frameworkUrl: "./public/unity/test15.framework.js",
+    codeUrl: "./public/unity/test15.wasm",
   });
+  
 
   useEffect(() => {
     const auth = getAuth();
