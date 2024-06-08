@@ -12,13 +12,55 @@ import {
 import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
-
+import Unity, { UnityContext } from "react-unity-webgl";
+import { Web } from "@mui/icons-material";
+import { set } from "date-fns";
 interface ScheduledTask {
-  Title: string;
+  title: string;
   startTime: string;
   endTime: string;
   done: boolean;
 }
+
+
+
+const Webgl: React.FC<{ m: number; c: number; t: number; l: number }> = ({
+  m,
+  c,
+  t,
+  l,
+}) => {
+  const unityContext = new UnityContext({
+    loaderUrl: "unity/test8.loader.js",
+    dataUrl: "unity/test8.data",
+    frameworkUrl: "unity/test8.framework.js",
+    codeUrl: "unity/test8.wasm",
+  });
+
+  const burgerConfig = {
+    meatCount: m,
+    cheeseCount: c,
+    tomatoCount: t,
+    lettuceCount: l,
+  };
+
+  useEffect(() => {
+    unityContext.on("loaded", () => {
+      unityContext.send(
+        "Scripts",
+        "ConfigureBurger",
+        JSON.stringify(burgerConfig)
+      );
+    });
+  }, [unityContext]);
+
+  return (
+    <div style={{ position: "relative" }}>
+      <Unity unityContext={unityContext} style={{ width: 640, height: 640 }} />
+    </div>
+  );
+};
+
 
 const ScheduleToBurger: React.FC = () => {
   const [schedule, setschedule] = useState<ScheduledTask[]>([]);
@@ -56,25 +98,32 @@ const ScheduleToBurger: React.FC = () => {
   }, []);
 
   const fetchSchedule = async (userId: string) => {
+    const docPath =  `schedule/${userId}/schedule/${today}`;
+
     try {
-      const eventsRef = query(collection(db,"schedule", userId, today));
-
-      const querySnapshot = await getDocs(eventsRef);
-      const fetchedschedule = querySnapshot.docs.map((doc) => ({
-        Title: doc.data().title,
-        startTime: doc.data().startTime,
-        endTime: doc.data().endTime,
-        done: doc.data().done,
-      }));
-      console.log("fetchedschedule", fetchedschedule);
-
-      setschedule(fetchedschedule);
-
-      // console.log("events:", events);
-    } catch (err) {
-      throw new Error("Error fetching user data:");
+        const docRef = doc(db, docPath);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()){
+            const data = docSnap.data();
+            const Schedule = data.scheduledTask.ScheduledTask.map((ScheduledTask: ScheduledTask) => ({
+                title: ScheduledTask.title,
+                startTime: ScheduledTask.startTime,
+                endTime: ScheduledTask.endTime,
+                done: ScheduledTask.done
+            }));
+            console.log('fetched data', Schedule);
+            setschedule(Schedule);  // スケジュールイベントの配列を設定
+            console.log('schedule', schedule);
+            return schedule;
+        } else {
+            console.log("No such document!");
+            return [];  // ドキュメントが存在しない場合は空の配列を返す
+        }
+    } catch (error) {
+        console.error("Error fetching schedule events:", error);
+        throw new Error("Failed to fetch schedule events");
     }
-  };
+    };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -96,7 +145,7 @@ const ScheduleToBurger: React.FC = () => {
     ${schedule
       .map(
         (ScheduledTask) =>
-          `Title: ${ScheduledTask.Title}, done: ${ScheduledTask.done}`
+          `Title: ${ScheduledTask.title}, done: ${ScheduledTask.done}`
       )
       .join("\n")}
     
@@ -138,12 +187,7 @@ const ScheduleToBurger: React.FC = () => {
         <h1 style={styles.mainTitle}>BurgerLendar</h1>
       </header>
       <main style={styles.main}>
-        <img
-          src="https://thumb.ac-illust.com/36/36ac3e42b8ed38dce15bc0ad7c5e9a1c_t.jpeg"
-          alt="burger"
-          style={styles.burgerImage}
-        />
-        <div style={styles.username}>{userName}</div>
+        <Webgl m={10} c={2} t={2} l={2} />
         <div style={styles.quote}>
           {out ? (
             <div
