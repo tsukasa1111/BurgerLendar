@@ -122,7 +122,7 @@ export const Login = () => {
             Sign In
           </Button>
           <Typography variant="caption">
-            <Link href="#">Forgot Password?</Link>
+            <Link href="forgetpass">Forgot Password?</Link>
           </Typography>
           <Typography variant="caption" display="block">
             Don't have an account?
