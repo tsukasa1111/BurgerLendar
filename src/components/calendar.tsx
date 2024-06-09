@@ -185,7 +185,7 @@ const Calendar = () => {
 
   return (
     <div className="w-full flex flex-col items-start justify-start" style={{ height: `${viewportHeight - 120}px`, backgroundColor: '#F9ECCB' }}>
-      <div className="header w-full max-w-6xl shadow-md rounded-lg overflow-hidden bg-white">
+      <div className="header w-full shadow-md rounded-lg overflow-hidden bg-white">
         <div className="flex items-center justify-between p-4" style={{ backgroundColor: '#1a237e' }}>
           <button className="text-gray-500" onClick={() => handleMonthChange(-1)}>&lt;</button>
           <h2 className="text-lg font-bold text-white cursor-pointer">{`${currentYear}年${currentMonth + 1}月`}</h2>
