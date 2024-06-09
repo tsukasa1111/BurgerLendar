@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { collection, doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import { useNavigate } from "react-router-dom"; // useNavigateをインポート
-import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
-import Akinator from "./akinator.png"; 
-import { Height } from '@mui/icons-material';
+import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
+import Akinator from "./akinator.png";
+import { Height } from "@mui/icons-material";
 import useViewportHeight from "../hooks/useViewportHeight"; // Import the custom hook
 
 const FoodAki: React.FC = () => {
@@ -29,8 +29,10 @@ const FoodAki: React.FC = () => {
   }, []);
 
   const handleOptionToggle = (option: string) => {
-    setSelectedOptions(prev =>
-      prev.includes(option) ? prev.filter(opt => opt !== option) : [...prev, option]
+    setSelectedOptions((prev) =>
+      prev.includes(option)
+        ? prev.filter((opt) => opt !== option)
+        : [...prev, option]
     );
   };
 
@@ -41,28 +43,31 @@ const FoodAki: React.FC = () => {
     }
     if (selectedOptions.length === 0) {
       console.error("オプションを選択してください");
-      
     }
 
     try {
       const userAkiRef = doc(db, "Users_Aki", user.uid);
-      await setDoc(userAkiRef, {
-        food: selectedOptions,
-        created_at: serverTimestamp()
-      }, { merge: true });
+      await setDoc(
+        userAkiRef,
+        {
+          food: selectedOptions,
+          created_at: serverTimestamp(),
+        },
+        { merge: true }
+      );
       console.log("Selected options saved successfully.");
       setShowCheckmark(true);
       setTimeout(() => {
         setShowCheckmark(false);
-        navigate('/sleep');
-      }, 500); // 0.5秒後に次のページに遷移
+        navigate("/sleep");
+      }, 500);
     } catch (error) {
       console.error("Error saving selected options: ", error);
     }
   };
 
   return (
-    <div style={{ ...styles.container, height: viewportHeight-60 }}>
+    <div style={{ ...styles.container, height: viewportHeight - 60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
@@ -72,18 +77,25 @@ const FoodAki: React.FC = () => {
         ) : (
           <>
             <div style={styles.questionContainer}>
-              <img src={Akinator} alt="Akinator"  /> 
-              <h2 style={styles.question}>質問2/5:</h2>
-              <p style={styles.subQuestion}>食事をいつしますか？（複数選択可）</p>
+              <img
+                src={Akinator}
+                alt="Akinator"
+                style={{ width: "85%", height: "90%" }}
+              />
+              <h2 style={styles.question}>質問2/4:</h2>
+              <p style={styles.subQuestion}>
+                食事をいつしますか？（複数選択可）
+              </p>
             </div>
             <div style={styles.optionsContainer}>
-
-              {['朝', '昼', '夜'].map(option => (
+              {["朝", "昼", "夜"].map((option) => (
                 <button
                   key={option}
                   style={{
                     ...styles.optionButton,
-                    backgroundColor: selectedOptions.includes(option) ? '#f4a261' : '#f1faee',
+                    backgroundColor: selectedOptions.includes(option)
+                      ? "#f4a261"
+                      : "#f1faee",
                   }}
                   onClick={() => handleOptionToggle(option)}
                 >
@@ -100,79 +112,78 @@ const FoodAki: React.FC = () => {
     </div>
   );
 };
-
 const styles = {
   container: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    height: 'calc(100vh - 60px)',
-    backgroundColor: '#1d3557',
-    color: '#f4a261',
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#1d3557",
+    color: "#f4a261",
   },
   header: {
-    width: '100%',
-    textAlign: 'center' as 'center',
-    backgroundColor: '#1d3557',
-    padding: '10px 0',
+    width: "100%",
+    textAlign: "center" as "center",
+    backgroundColor: "#1d3557",
+    padding: "10px 0",
   },
   title: {
-    fontSize: '2.5em',
-    margin: '0',
+    fontSize: "2.5em",
+    margin: "0",
   },
   main: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    alignItems: 'center',
-    backgroundColor: '#f1faee',
-    padding: '20px',
-    borderRadius: '10px',
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    backgroundColor: "#f1faee",
+    padding: "20px",
+    borderRadius: "10px",
   },
   questionContainer: {
-    textAlign: 'center' as 'center',
-    marginBottom: '20px',
+    textAlign: "center" as "center",
+    marginBottom: "20px",
   },
   question: {
-    fontSize: '1.5em',
-    margin: '0',
-    color: '#000',
+    fontSize: "1.5em",
+    margin: "0",
+    color: "#000",
   },
   subQuestion: {
-    fontSize: '1em',
-    margin: '0',
-    color: '#000',
+    fontSize: "1em",
+    margin: "0",
+    color: "#000",
   },
   optionsContainer: {
-    display: 'flex',
-    flexDirection: 'column' as 'column',
-    width: '100%',
-    alignItems: 'center',
+    display: "flex",
+    flexDirection: "column" as "column",
+    width: "100%",
+    alignItems: "center",
   },
   optionButton: {
-    width: '80%',
-    padding: '10px 0',
-    margin: '10px 0',
-    border: 'none',
-    borderRadius: '5px',
-    cursor: 'pointer',
-    fontSize: '1em',
-    color: '#000',
+    width: "80%",
+    padding: "10px 0",
+    margin: "10px 0",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "1em",
+    color: "#000",
   },
   submitButton: {
-    backgroundColor: '#f4a261',
-    color: '#1d3557',
-    border: 'none',
-    padding: '10px 20px',
-    margin: '20px 0 0 0',
-    fontSize: '1em',
-    borderRadius: '5px',
-    cursor: 'pointer',
+    backgroundColor: "#f4a261",
+    color: "#1d3557",
+    border: "none",
+    padding: "10px 20px",
+    margin: "20px 0 0 0",
+    fontSize: "1em",
+    borderRadius: "5px",
+    cursor: "pointer",
   },
   checkmark: {
-    fontSize: '4em',
-    color: '#f4a261',
+    fontSize: "4em",
+    color: "#f4a261",
   },
 };
+
 
 export default FoodAki;

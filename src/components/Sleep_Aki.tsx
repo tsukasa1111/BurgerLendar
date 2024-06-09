@@ -54,7 +54,7 @@ const Aki_Sleep: React.FC = () => {
         setShowCheckmark(true);
         setTimeout(() => {
           setShowCheckmark(false);
-          navigate("/laun");
+          navigate("/smoke");
         }, 500); // 0.5秒後に次のページに遷移
       } catch (error) {
         console.error("Error saving selected option: ", error);
@@ -68,7 +68,7 @@ const Aki_Sleep: React.FC = () => {
   const options = Array.from({ length: 13 }, (_, i) => i); // Changed to numbers
 
   return (
-    <div style={{ ...styles.container, height: viewportHeight-60 }}>
+    <div style={{ ...styles.container, height: viewportHeight - 60 }}>
       <header style={styles.header}>
         <h1 style={styles.title}>BurgerNator</h1>
       </header>
@@ -78,8 +78,12 @@ const Aki_Sleep: React.FC = () => {
         ) : (
           <>
             <div style={styles.questionContainer}>
-              <img src={Akinator} alt="My Image" />
-              <h2 style={styles.question}>質問3/5:</h2>
+              <img
+                src={Akinator}
+                alt="My Image"
+                style={{ width: "85%", height: "90%" }}
+              />
+              <h2 style={styles.question}>質問3/4:</h2>
               <p style={styles.subQuestion}>睡眠どれくらいしますか？</p>
             </div>
             <div style={styles.optionsContainer}>
@@ -157,18 +161,21 @@ const styles = {
     margin: "0",
     color: "#000",
   },
+  optionButton: {
+    width: "80%",
+    padding: "10px 0",
+    margin: "10px 0",
+    border: "none",
+    borderRadius: "5px",
+    cursor: "pointer",
+    fontSize: "1em",
+    color: "#000",
+  },
   optionsContainer: {
     display: "flex",
     flexDirection: "column" as "column",
     width: "100%",
     alignItems: "center",
-  },
-  selectBox: {
-    width: "80%",
-    padding: "10px",
-    margin: "10px 0",
-    borderRadius: "5px",
-    fontSize: "1em",
   },
   submitButton: {
     color: "#1d3557",
@@ -177,12 +184,13 @@ const styles = {
     margin: "20px 0 0 0",
     fontSize: "1em",
     borderRadius: "5px",
-    transition: "background-color 0.3s", // Added transition for background color change
   },
   checkmark: {
     fontSize: "4em",
     color: "#f4a261",
   },
+  
 };
+
 
 export default Aki_Sleep;

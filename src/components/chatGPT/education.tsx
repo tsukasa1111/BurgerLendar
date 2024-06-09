@@ -1,14 +1,13 @@
-import React, { useState, useEffect, ChangeEvent, FormEvent } from "react";
+import React, { useState, useEffect } from "react";
 import {
   collection,
   doc,
-  setDoc,
-  serverTimestamp,
   getDocs,
   getDoc,
   query,
-  where,
+  setDoc,
 } from "firebase/firestore";
+import { parseSchedule, ScheduleEvent } from "../ScheduleParser";
 import {
   Quote,
   MotivationQuotes,
@@ -17,32 +16,27 @@ import {
 } from "./loading/data";
 import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
-import Home from "./home";
 import axios from "axios";
-import { CSSProperties } from "react";
-import { set } from "date-fns";
-import { start } from "repl";
-
-interface Item {
-  id: string;
-  text: string;
-  dueDate: string;
-}
+import { useNavigate } from "react-router-dom";
+import Loading from "./loading/welcometoBurger"; // Import the Loading component
 
 interface EduProps {
   setOutput: (output: string) => void;
   mode: string; // Add mode to the props interface
 }
+
 interface ScheduledTask {
   Title: string;
   deadline: string;
 }
+
 interface Event {
   name: string;
   date: string;
   startTime: string;
   endTime: string;
 }
+
 interface aki {
   bath: string[];
   food: string[];
@@ -55,7 +49,6 @@ interface aki {
 const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
   const [events, setEvents] = useState<Event[]>([]);
   const [scheduleTasks, setScheduleTasks] = useState<ScheduledTask[]>([]);
-
   const [Aki, setAki] = useState<aki>({
     bath: [],
     food: [],
@@ -64,26 +57,22 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
     sleep: 0,
     smoke: 0,
   });
-
-  const [out, setout] = useState<string>("");
   const [user, setUser] = useState<any>(null);
   const [userName, setUserName] = useState<any>(null);
   const [quote, setQuote] = useState<Quote | null>(null);
   const [today, setToday] = useState<string>("");
   const [countdata, setcountdata] = useState<number>(0);
+  const [scheduleText, setScheduleText] = useState<string>(""); // State to hold the generated schedule text
+  const [isLoading, setIsLoading] = useState<boolean>(true); // State to manage loading status
+  const navigate = useNavigate(); // Use the useNavigate hook from React Router
 
-  const getCurrentDateFormatted = () => {
-    const now = new Date();
-    const year = now.getFullYear(); // 年を取得
-    const month = now.getMonth() + 1; // 月を取得（月は0から始まるため+1する）
-    const day = now.getDate(); // 日を取得
-
-    // MMとDDの形式を保証するために、必要に応じて0を追加
-    const formattedMonth = month < 10 ? `0${month}` : month;
-    const formattedDay = day < 10 ? `0${day}` : day;
-
-    return `${year}${"-"}${formattedMonth}${"-"}${formattedDay}`; // 'YYYY-MMDD'の形式で返す
-  };
+  function getCurrentDateFormatted() {
+    const today = new Date();
+    const year = today.getFullYear().toString().slice(2); // 年の下2桁を取得
+    const month = (today.getMonth() + 1).toString().padStart(2, "0"); // 月を2桁で取得
+    const day = today.getDate().toString().padStart(2, "0"); // 日を2桁で取得
+    return year + month + day; // 結合して文字列を返す
+  }
 
   useEffect(() => {
     if (mode === "relax") {
@@ -109,18 +98,15 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       return;
     }
     throw new Error("No such document!");
-  }, []);
+  }, [mode]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
         fetchEvents(currentUser.uid);
-
         fetchtodos(currentUser.uid);
-
         fetchUserName(currentUser.uid);
-
         fetchUserAki(currentUser.uid);
       } else {
         setUser(null);
@@ -151,24 +137,20 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
   const fetchEvents = async (userId: string) => {
     try {
       const eventsRef = query(collection(db, "users", userId, "events"));
-
       const querySnapshot = await getDocs(eventsRef);
       const fetchedEvents = querySnapshot.docs.map((doc) => ({
         date: doc.data().date,
         name: doc.data().title,
         endTime: doc.data().endTime,
         startTime: doc.data().startTime,
-        
       }));
       console.log("event", fetchedEvents);
-
       setEvents(fetchedEvents);
-
-      // console.log("events:", events);
     } catch (err) {
       throw new Error("Error fetching user data:");
     }
   };
+
   const fetchtodos = async (userId: string) => {
     try {
       const eventsRef = query(collection(db, "users", userId, "todos"));
@@ -176,17 +158,15 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       const fetchedTodos = querySnapshot.docs.map((doc) => ({
         Title: doc.data().text,
         deadline: doc.data().dueDate,
-        
       }));
       console.log("todos", fetchedTodos);
       setScheduleTasks(fetchedTodos);
       setcountdata(countdata + 1);
-
-      // console.log("todos:", scheduleTasks);
     } catch (err) {
       throw new Error("Error fetching user data:");
     }
   };
+
   const fetchUserName = async (userId: string) => {
     try {
       const docRef = doc(db, "Users", userId);
@@ -210,29 +190,6 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
     }
     handleSubmit();
   }, [countdata]);
-
-  // useEffect(() => {
-  //   async function fetchData() {
-  //     if (!user) {
-  //       console.log("User is not authenticated or not available in fetchdata.");
-  //       return;
-  //     }
-  //     try {
-  //       await Promise.all([
-  //         fetchUserAki(),
-  //         fetchEvents(),
-  //         fetchtodos(),
-  //         fetchUserName(),
-  //       ]);
-  //       handleSubmit();
-  //     } catch (error) {
-  //       console.error("Error fetching data:", error);
-  //     }
-  //   }
-  //   return () => {
-  //     fetchData();
-  //   };
-  // }, [user]);
 
   const handleSubmit = async () => {
     console.log("aki in handlesubmit", Aki);
@@ -289,7 +246,8 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       const response = await axios.post(
         "https://api.openai.com/v1/chat/completions",
         {
-          model: "gpt-3.5-turbo",
+          //gpt-4o
+          model: "gpt-4o",
           messages: [{ role: "system", content: prompt }],
         },
         {
@@ -301,11 +259,47 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       );
       console.log(response.data.choices[0].message.content);
       setOutput(response.data.choices[0].message.content);
-      setout(response.data.choices[0].message.content);
+      setScheduleText(response.data.choices[0].message.content); // Set the generated schedule text to state
+
+      // Save the schedule to Firestore
+      if (user) {
+        const today = new Date().toISOString().split("T")[0];
+        const formattedDate = today.replace(/-/g, "").slice(2);
+        const docRef = doc(db, "users", user.uid, "schedule", formattedDate);
+        await setDoc(docRef, {
+          text: response.data.choices[0].message.content,
+        });
+
+        // Parse the schedule text and save the events
+        const parsedEvents = parseSchedule(
+          response.data.choices[0].message.content
+        ).map((event) => ({
+          ...event,
+          done: false,
+        }));
+        const eventsCollectionRef = collection(
+          db,
+          "schedule",
+          user.uid,
+          "schedule",
+          formattedDate,
+          "events"
+        );
+        parsedEvents.forEach(async (event, index) => {
+          const eventDocRef = doc(eventsCollectionRef, index.toString());
+          await setDoc(eventDocRef, event);
+        });
+
+        console.log("Schedule saved to Firestore!");
+        setTimeout(() => {
+          navigate("/homme"); // Navigate to /homme after saving
+        }, 0); // Delay navigation by 100 milliseconds
+      }
     } catch (error) {
-      throw new Error("error in generating schedule:");
+      console.error("Error in generating or saving schedule:", error);
     }
   };
+
   return (
     <div style={styles.container}>
       <header style={styles.header}>
