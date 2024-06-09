@@ -4,6 +4,7 @@ import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import Unity, { UnityContext } from "react-unity-webgl";
+import { Button } from "@headlessui/react";
 import "../App.css";
 import axios from "axios";
 
@@ -50,7 +51,6 @@ const Webgl: React.FC<{ burgerConfig: BurgerConfig }> = ({ burgerConfig }) => {
     <Unity unityContext={unityContext} style={{ width: 1240, height: 600 }} />
   );
 };
-
 
 const Bur_Home: React.FC = () => {
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
@@ -125,7 +125,11 @@ const Bur_Home: React.FC = () => {
       });
       const updatedBurgerConfig = { ...burgerConfig };
       console.log("completedEventsSet.size", completedEventsSet.size);
-      for (var i = Number(completedEventsSet.size/2); i < completedEventsSet.size; i++) {
+      for (
+        var i = Number(completedEventsSet.size / 2);
+        i < completedEventsSet.size;
+        i++
+      ) {
         var randomInt = getRandomInt();
         console.log(randomInt);
         if (randomInt === 1) {
@@ -287,9 +291,12 @@ const Bur_Home: React.FC = () => {
           })}
         </ul>
       </div>
-      <button onClick={() => setShowWebGL(!showWebGL)}>
-        {showWebGL ? "ハンバーガー隠すよ！" : "ハンバーガー見たい？"}
-      </button>
+      <Button
+        className="rounded bg-sky-600 py-2 px-4 text-sm text-white data-[hover]:bg-sky-500 data-[hover]:data-[active]:bg-sky-700"
+        onClick={() => setShowWebGL(!showWebGL)}
+      >
+        {showWebGL ? "ハンバーガー隠すよ！" : "ハンバーガー生成"}
+      </Button>
       {showWebGL && <Webgl burgerConfig={burgerConfig} />}
     </div>
   );
