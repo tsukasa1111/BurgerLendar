@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from "react";
-import { collection, doc, getDocs, getDoc, query, setDoc } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  getDoc,
+  query,
+  setDoc,
+} from "firebase/firestore";
 import { parseSchedule, ScheduleEvent } from "../ScheduleParser";
-import { Quote, MotivationQuotes, NonMotivationQuotes, DefoMotivationQuotes } from "./loading/data";
+import {
+  Quote,
+  MotivationQuotes,
+  NonMotivationQuotes,
+  DefoMotivationQuotes,
+} from "./loading/data";
 import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
 import axios from "axios";
@@ -64,17 +76,24 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
 
   useEffect(() => {
     if (mode === "relax") {
-      const randomQuote = NonMotivationQuotes[Math.floor(Math.random() * NonMotivationQuotes.length)];
+      const randomQuote =
+        NonMotivationQuotes[
+          Math.floor(Math.random() * NonMotivationQuotes.length)
+        ];
       setQuote(randomQuote);
       return;
     }
     if (mode === "normal") {
-      const randomQuote = DefoMotivationQuotes[Math.floor(Math.random() * DefoMotivationQuotes.length)];
+      const randomQuote =
+        DefoMotivationQuotes[
+          Math.floor(Math.random() * DefoMotivationQuotes.length)
+        ];
       setQuote(randomQuote);
       return;
     }
     if (mode === "hard") {
-      const randomQuote = MotivationQuotes[Math.floor(Math.random() * MotivationQuotes.length)];
+      const randomQuote =
+        MotivationQuotes[Math.floor(Math.random() * MotivationQuotes.length)];
       setQuote(randomQuote);
       return;
     }
@@ -228,33 +247,44 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
         "https://api.openai.com/v1/chat/completions",
         {
           //gpt-4o
-          model: "gpt-3.5-turbo",
+          model: "gpt-4o",
           messages: [{ role: "system", content: prompt }],
         },
         {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${process.env.REACT_APP_OPENAI_API_KEY}`,
-          }
+          },
         }
       );
       console.log(response.data.choices[0].message.content);
       setOutput(response.data.choices[0].message.content);
       setScheduleText(response.data.choices[0].message.content); // Set the generated schedule text to state
-      
+
       // Save the schedule to Firestore
       if (user) {
-        const today = new Date().toISOString().split('T')[0];
-        const formattedDate = today.replace(/-/g, '').slice(2);
+        const today = new Date().toISOString().split("T")[0];
+        const formattedDate = today.replace(/-/g, "").slice(2);
         const docRef = doc(db, "users", user.uid, "schedule", formattedDate);
-        await setDoc(docRef, { text: response.data.choices[0].message.content });
+        await setDoc(docRef, {
+          text: response.data.choices[0].message.content,
+        });
 
         // Parse the schedule text and save the events
-        const parsedEvents = parseSchedule(response.data.choices[0].message.content).map(event => ({
+        const parsedEvents = parseSchedule(
+          response.data.choices[0].message.content
+        ).map((event) => ({
           ...event,
-          done: false
+          done: false,
         }));
-        const eventsCollectionRef = collection(db, "schedule", user.uid, "schedule", formattedDate, "events");
+        const eventsCollectionRef = collection(
+          db,
+          "schedule",
+          user.uid,
+          "schedule",
+          formattedDate,
+          "events"
+        );
         parsedEvents.forEach(async (event, index) => {
           const eventDocRef = doc(eventsCollectionRef, index.toString());
           await setDoc(eventDocRef, event);

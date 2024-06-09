@@ -125,11 +125,7 @@ const Bur_Home: React.FC = () => {
       });
       const updatedBurgerConfig = { ...burgerConfig };
       console.log("completedEventsSet.size", completedEventsSet.size);
-      for (
-        var i = Number(completedEventsSet.size / 2);
-        i < completedEventsSet.size;
-        i++
-      ) {
+      for (var i = 0; i < completedEventsSet.size; i++) {
         var randomInt = getRandomInt();
         console.log(randomInt);
         if (randomInt === 1) {
@@ -142,7 +138,7 @@ const Bur_Home: React.FC = () => {
           updatedBurgerConfig.includeLettuceCount += 1;
         }
       }
-
+      setCompletedEvents(completedEventsSet);
       setBurgerConfig(updatedBurgerConfig);
       console.log(updatedBurgerConfig);
     } catch (error) {
