@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { collection, doc, getDocs, getDoc, query, setDoc } from "firebase/firestore";
+import { parseSchedule, ScheduleEvent } from "../ScheduleParser";
 import { Quote, MotivationQuotes, NonMotivationQuotes, DefoMotivationQuotes } from "./loading/data";
 import { auth, db } from "../../firebase/firebase"; // Import the initialized Firestore instance
 import { onAuthStateChanged } from "firebase/auth";
@@ -244,8 +245,21 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
       // Save the schedule to Firestore
       if (user) {
         const today = new Date().toISOString().split('T')[0];
-        const docRef = doc(db, "users", user.uid, "schedule", today);
+        const formattedDate = today.replace(/-/g, '').slice(2);
+        const docRef = doc(db, "users", user.uid, "schedule", formattedDate);
         await setDoc(docRef, { text: response.data.choices[0].message.content });
+
+        // Parse the schedule text and save the events
+        const parsedEvents = parseSchedule(response.data.choices[0].message.content).map(event => ({
+          ...event,
+          done: false
+        }));
+        const eventsCollectionRef = collection(db, "schedule", user.uid, "schedule", formattedDate, "events");
+        parsedEvents.forEach(async (event, index) => {
+          const eventDocRef = doc(eventsCollectionRef, index.toString());
+          await setDoc(eventDocRef, event);
+        });
+
         console.log("Schedule saved to Firestore!");
         setTimeout(() => {
           navigate("/homme"); // Navigate to /homme after saving
@@ -258,90 +272,89 @@ const Edu: React.FC<EduProps> = ({ setOutput, mode }) => {
 
   return (
     <div style={styles.container}>
-    <header style={styles.header}>
-      <h1 style={styles.title}>Welcome to</h1>
-      <h1 style={styles.mainTitle}>BurgerLendar</h1>
-    </header>
-    <main style={styles.main}>
-      <img
-        src="https://thumb.ac-illust.com/36/36ac3e42b8ed38dce15bc0ad7c5e9a1c_t.jpeg"
-        alt="burger"
-        style={styles.burgerImage}
-      />
-      <div style={styles.username}>{userName}</div>
-      <div style={styles.quote}>
-        {quote ? (
-          <div
-            style={{
-              padding: "20px",
-              border: "1px solid #ccc",
-              borderRadius: "5px",
-              textAlign: "center",
-            }}
-          >
-            <p style={{ fontSize: "1.5em", fontStyle: "italic" }}>
-              {quote.text}
-            </p>
-            <p style={{ fontSize: "1.2em", marginTop: "10px" }}>
-              — {quote.author}
-            </p>
-          </div>
-        ) : (
-          <p>Loading quote...</p>
-        )}
-      </div>
-    </main>
-  </div>
-);
+      <header style={styles.header}>
+        <h1 style={styles.title}>Welcome to</h1>
+        <h1 style={styles.mainTitle}>BurgerLendar</h1>
+      </header>
+      <main style={styles.main}>
+        <img
+          src="https://thumb.ac-illust.com/36/36ac3e42b8ed38dce15bc0ad7c5e9a1c_t.jpeg"
+          alt="burger"
+          style={styles.burgerImage}
+        />
+        <div style={styles.username}>{userName}</div>
+        <div style={styles.quote}>
+          {quote ? (
+            <div
+              style={{
+                padding: "20px",
+                border: "1px solid #ccc",
+                borderRadius: "5px",
+                textAlign: "center",
+              }}
+            >
+              <p style={{ fontSize: "1.5em", fontStyle: "italic" }}>
+                {quote.text}
+              </p>
+              <p style={{ fontSize: "1.2em", marginTop: "10px" }}>
+                — {quote.author}
+              </p>
+            </div>
+          ) : (
+            <p>Loading quote...</p>
+          )}
+        </div>
+      </main>
+    </div>
+  );
 };
 
 const styles = {
-container: {
-  display: "flex",
-  flexDirection: "column" as "column",
-  alignItems: "center",
-  justifyContent: "center",
-  height: "100vh",
-  backgroundColor: "#003366",
-  color: "#F9ECCB",
-  textAlign: "center" as "center",
-},
-header: {
-  marginBottom: "20px",
-},
-title: {
-  fontSize: "1.5em",
-  margin: "0",
-  color: "#F9ECCB",
-},
-mainTitle: {
-  fontSize: "2.5em",
-  margin: "0",
-  color: "#F9ECCB",
-},
-main: {
-  display: "flex",
-  flexDirection: "column" as "column",
-  alignItems: "center",
-  backgroundColor: "#003366",
-  padding: "20px",
-  borderRadius: "10px",
-},
-burgerImage: {
-  width: "150px",
-  height: "150px",
-},
-username: {
-  marginTop: "20px",
-  fontSize: "1.2em",
-  color: "#F9ECCB",
-},
-quote: {
-  marginTop: "10px",
-  fontSize: "1em",
-  color: "#F9ECCB",
-},
+  container: {
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    justifyContent: "center",
+    height: "100vh",
+    backgroundColor: "#003366",
+    color: "#F9ECCB",
+    textAlign: "center" as "center",
+  },
+  header: {
+    marginBottom: "20px",
+  },
+  title: {
+    fontSize: "1.5em",
+    margin: "0",
+    color: "#F9ECCB",
+  },
+  mainTitle: {
+    fontSize: "2.5em",
+    margin: "0",
+    color: "#F9ECCB",
+  },
+  main: {
+    display: "flex",
+    flexDirection: "column" as "column",
+    alignItems: "center",
+    backgroundColor: "#003366",
+    padding: "20px",
+    borderRadius: "10px",
+  },
+  burgerImage: {
+    width: "150px",
+    height: "150px",
+  },
+  username: {
+    marginTop: "20px",
+    fontSize: "1.2em",
+    color: "#F9ECCB",
+  },
+  quote: {
+    marginTop: "10px",
+    fontSize: "1em",
+    color: "#F9ECCB",
+  },
 };
 
 export default Edu;
-
