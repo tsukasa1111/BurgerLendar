@@ -28,6 +28,7 @@ import ModeSelector from "./components/ModeSelector";
 import GPT from "./components/Bur_Home";
 import WebglApp from "./components/webGL/page";
 import ScheduleToBurger from "./components/chatGPT/scheduleToBurger";
+import ForgetPassword from "./components/password_forget";
 
 function App() {
   return (
@@ -54,6 +55,7 @@ function App() {
           <Route path="/schedule" element={<ScheduleToBurger />} />
           <Route path="/home" element={<GPT mode="relax" />} />
           <Route path="/homme" element={<Homme />} />
+          <Route path="/forgetpass" element={<ForgetPassword />} />
         </Routes>
       </div>
       <ConditionalFooter />
