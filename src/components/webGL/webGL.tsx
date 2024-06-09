@@ -12,7 +12,7 @@ interface BurgerConfig {
 
 function Webgl() {
   const [burgerConfig, setBurgerConfig] = useState<BurgerConfig>({
-    includeMeatCount: 10,
+    includeMeatCount: 6,
     includeCheeseCount: 2,
     includeTomatoCount: 2,
     includeLettuceCount: 2,

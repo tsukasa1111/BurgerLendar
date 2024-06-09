@@ -4,7 +4,8 @@ import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase/firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import Unity, { UnityContext } from "react-unity-webgl";
-import '../App.css';
+import "../App.css";
+import axios from "axios";
 
 interface UnityInstanceUrls {
   dataUrl: string;
@@ -19,6 +20,10 @@ interface BurgerConfig {
   includeTomatoCount: number;
   includeLettuceCount: number;
 }
+interface WebglProps {
+  burgerConfig: BurgerConfig;
+  completedEventCount: number;
+}
 
 const Webgl: React.FC<{ burgerConfig: BurgerConfig }> = ({ burgerConfig }) => {
   const unityContext = new UnityContext({
@@ -30,29 +35,37 @@ const Webgl: React.FC<{ burgerConfig: BurgerConfig }> = ({ burgerConfig }) => {
 
   useEffect(() => {
     unityContext.on("loaded", () => {
-      unityContext.send("Scripts", "ConfigureBurger", JSON.stringify(burgerConfig));
+      unityContext.send(
+        "Scripts",
+        "ConfigureBurger",
+        JSON.stringify(burgerConfig)
+      );
     });
-
     return () => {
       unityContext.removeAllEventListeners();
     };
-  }, [burgerConfig, unityContext]);
+  }, [burgerConfig]);
 
-  return <Unity unityContext={unityContext} style={{ width: 1240, height: 600 }} />;
+  return (
+    <Unity unityContext={unityContext} style={{ width: 1240, height: 600 }} />
+  );
 };
+
 
 const Bur_Home: React.FC = () => {
   const [scheduleEvents, setScheduleEvents] = useState<ScheduleEvent[]>([]);
-  const [completedEvents, setCompletedEvents] = useState<Set<number>>(new Set());
+  const [completedEvents, setCompletedEvents] = useState<Set<number>>(
+    new Set()
+  );
   const [user, setUser] = useState<any>(null);
   const currentEventRef = useRef<HTMLLIElement | null>(null);
   const [scheduleText, setScheduleText] = useState<string>("");
   const [showWebGL, setShowWebGL] = useState(false);
   const [burgerConfig, setBurgerConfig] = useState<BurgerConfig>({
-    includeMeatCount: 4,
-    includeCheeseCount: 2,
-    includeTomatoCount: 1,
-    includeLettuceCount: 1,
+    includeMeatCount: 0,
+    includeCheeseCount: 0,
+    includeTomatoCount: 0,
+    includeLettuceCount: 0,
   });
 
   useEffect(() => {
@@ -63,6 +76,7 @@ const Bur_Home: React.FC = () => {
         fetchCompletedEvents(currentUser.uid); // Fetch completed events
       } else {
         setUser(null);
+        console.log("No user signed in");
       }
     });
 
@@ -70,7 +84,7 @@ const Bur_Home: React.FC = () => {
   }, []);
 
   const fetchSchedule = async (userId: string) => {
-    const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
     const formattedDate = today.slice(2);
 
     try {
@@ -88,19 +102,45 @@ const Bur_Home: React.FC = () => {
   };
 
   const fetchCompletedEvents = async (userId: string) => {
-    const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+    const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
     const formattedDate = today.slice(2);
+    function getRandomInt() {
+      return Math.floor(Math.random() * 4) + 1;
+    }
 
     try {
-      const completedEventsRef = collection(db, "users", userId, "schedule", formattedDate, "completedEvents");
+      const completedEventsRef = collection(
+        db,
+        "users",
+        userId,
+        "schedule",
+        formattedDate,
+        "completedEvents"
+      );
       const completedEventsSnap = await getDocs(completedEventsRef);
       const completedEventsSet = new Set<number>();
 
       completedEventsSnap.forEach((doc) => {
         completedEventsSet.add(parseInt(doc.id));
       });
+      const updatedBurgerConfig = { ...burgerConfig };
+      console.log("completedEventsSet.size", completedEventsSet.size);
+      for (var i = Number(completedEventsSet.size/2); i < completedEventsSet.size; i++) {
+        var randomInt = getRandomInt();
+        console.log(randomInt);
+        if (randomInt === 1) {
+          updatedBurgerConfig.includeMeatCount += 1;
+        } else if (randomInt === 2) {
+          updatedBurgerConfig.includeCheeseCount += 1;
+        } else if (randomInt === 3) {
+          updatedBurgerConfig.includeTomatoCount += 1;
+        } else if (randomInt === 4) {
+          updatedBurgerConfig.includeLettuceCount += 1;
+        }
+      }
 
-      setCompletedEvents(completedEventsSet);
+      setBurgerConfig(updatedBurgerConfig);
+      console.log(updatedBurgerConfig);
     } catch (error) {
       console.error("Error fetching completed events: ", error);
     }
@@ -115,9 +155,16 @@ const Bur_Home: React.FC = () => {
 
   const saveScheduleEvents = async (events: ScheduleEvent[]) => {
     if (user) {
-      const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+      const today = new Date().toISOString().split("T")[0].replace(/-/g, "");
       const formattedDate = today.slice(2);
-      const eventsCollectionRef = collection(db, "users", user.uid, "schedule", formattedDate, "scheduleEvents");
+      const eventsCollectionRef = collection(
+        db,
+        "users",
+        user.uid,
+        "schedule",
+        formattedDate,
+        "scheduleEvents"
+      );
 
       try {
         const sortedEvents = events.sort((a, b) => {
@@ -128,9 +175,12 @@ const Bur_Home: React.FC = () => {
 
         for (let i = 0; i < sortedEvents.length; i++) {
           const event = sortedEvents[i];
-          await setDoc(doc(eventsCollectionRef, i.toString()), { ...event, done: false });
+          await setDoc(doc(eventsCollectionRef, i.toString()), {
+            ...event,
+            done: false,
+          });
         }
-        
+
         setScheduleEvents(sortedEvents);
       } catch (error) {
         console.error("Error saving schedule events: ", error);
@@ -146,9 +196,20 @@ const Bur_Home: React.FC = () => {
       if (window.confirm("完了しましたか？")) {
         newCheckedEvents.add(index);
         if (user) {
-          const today = new Date().toISOString().split('T')[0].replace(/-/g, '');
+          const today = new Date()
+            .toISOString()
+            .split("T")[0]
+            .replace(/-/g, "");
           const formattedDate = today.slice(2);
-          const docRef = doc(db, "users", user.uid, "schedule", formattedDate, "completedEvents", index.toString());
+          const docRef = doc(
+            db,
+            "users",
+            user.uid,
+            "schedule",
+            formattedDate,
+            "completedEvents",
+            index.toString()
+          );
           try {
             await setDoc(docRef, { done: true });
           } catch (error) {
@@ -168,20 +229,20 @@ const Bur_Home: React.FC = () => {
   const currentTime = getCurrentTime();
 
   const getMinutes = (time: string) => {
-    const [hours, minutes] = time.split(':').map(Number);
+    const [hours, minutes] = time.split(":").map(Number);
     return hours * 60 + minutes;
   };
 
   const formatDate = (date: Date) => {
     const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0');
-    const day = date.getDate().toString().padStart(2, '0');
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
     return `${year}年${month}月${day}日`;
   };
 
   const todayDate = formatDate(new Date());
 
-  let currentEventIndex = scheduleEvents.findIndex(event => {
+  let currentEventIndex = scheduleEvents.findIndex((event) => {
     const eventStartTime = getMinutes(event.startTime);
     const eventEndTime = getMinutes(event.endTime);
     return currentTime >= eventStartTime && currentTime < eventEndTime;
@@ -189,7 +250,10 @@ const Bur_Home: React.FC = () => {
 
   useEffect(() => {
     if (currentEventRef.current) {
-      currentEventRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      currentEventRef.current.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
     }
   }, [scheduleEvents]);
 
@@ -207,12 +271,16 @@ const Bur_Home: React.FC = () => {
               <li
                 key={index}
                 ref={isCurrent ? currentEventRef : null}
-                className={`schedule-item ${isCompleted ? 'completed' : ''} ${isCurrent ? 'current' : ''} ${isPast ? 'past' : ''}`}
+                className={`schedule-item ${isCompleted ? "completed" : ""} ${isCurrent ? "current" : ""} ${isPast ? "past" : ""}`}
                 onClick={isCompleted ? undefined : () => toggleCheck(index)}
               >
                 <div>
-                  <div className="schedule-time">{event.startTime} - {event.endTime}</div>
-                  <div className="schedule-title-item">{event.title.split('\n')[0]}</div>
+                  <div className="schedule-time">
+                    {event.startTime} - {event.endTime}
+                  </div>
+                  <div className="schedule-title-item">
+                    {event.title.split("\n")[0]}
+                  </div>
                 </div>
               </li>
             );
@@ -220,7 +288,7 @@ const Bur_Home: React.FC = () => {
         </ul>
       </div>
       <button onClick={() => setShowWebGL(!showWebGL)}>
-        {showWebGL ? 'ハンバーガー隠すよ！' : 'ハンバーガー見たい？'}
+        {showWebGL ? "ハンバーガー隠すよ！" : "ハンバーガー見たい？"}
       </button>
       {showWebGL && <Webgl burgerConfig={burgerConfig} />}
     </div>
