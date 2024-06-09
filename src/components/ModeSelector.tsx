@@ -208,17 +208,16 @@ const App: React.FC = () => {
         <>
           {weatherData ? (
             <div className="weather-container" style={styles.weatherContainer}>
-              
               <div className="weather" style={styles.weather}>
                 <div className="weather-info" style={styles.weatherInfo}>
-                  <div className="date" style={styles.date}>
-                    {/* 日付 */}
-                  </div>
-                  <div className="temperature" style={styles.temperature}>
-                    {weatherData.main.temp} °C
+                  <div className="date" style={styles.temperature}>
+                    今日の天気
                   </div>
                   <div className="location" style={styles.location}>
                     {weatherData.name} {weatherData.weather[0].description}
+                  </div>
+                  <div className="temperature" style={styles.temperature}>
+                    {weatherData.main.temp} °C
                   </div>
                   <div className="weather-icon">
                     <img
@@ -343,7 +342,7 @@ const styles: { [key: string]: CSSProperties } = {
     padding: "20px",
     backgroundColor: "#F9ECCB",
     color: "#333",
-    height: '${viewportHeight - 120}px',
+    height: "${viewportHeight - 120}px",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
